@@ -1,6 +1,7 @@
 package com.volkan;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -10,8 +11,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.codehaus.jackson.map.ObjectMapper;
 import org.neo4j.cypher.javacompat.ExecutionEngine;
 import org.neo4j.cypher.javacompat.ExecutionResult;
+import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.DynamicRelationshipType;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
@@ -19,6 +22,8 @@ import org.neo4j.graphdb.Path;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
+import org.neo4j.graphdb.traversal.Evaluators;
+import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.neo4j.kernel.Traversal;
 
 import com.volkan.csv.NodePropertyHolder;
@@ -26,11 +31,7 @@ import com.volkan.csv.StationNodePropertyHolder;
 
 public class Main {
 
-	// private static final String DB_PATH = "target/matrix-db";
-	private static final String DB_PATH =
-	// "/home/volkan/Development/tez/Neo4jSurumleri/neo4j-community-1.8.M07_hubway/data/graph.db";
-	"/home/volkan/Documents/workspace-sts-2.7.2.RELEASE/"
-			+ "neowithmaven20121016/src/main/resources/graph.db";
+	private static final String DB_PATH = "./src/main/resources/graph.db";
 
 	private static GraphDatabaseService db;
 
@@ -50,7 +51,7 @@ public class Main {
 		}
 
 		ExecutionEngine engine = new ExecutionEngine(db);
-		int hede = 5;
+		int hede = 6;
 		switch (hede) {
 		case 0:
 			test10NodeFetch(engine);
@@ -70,18 +71,79 @@ public class Main {
 		case 5:
 			traversalDeneme();
 			break;
+		case 6:
+			jacksonDeneme();
+			break;
 		default:
 			break;
 		}
 	}
 	
+	private static void jacksonDeneme() {
+		ObjectMapper mapper = new ObjectMapper();
+		try {
+//			mapper.writeValue(new File("user-modified.json"), userData);
+			Map<String,Object> userDataRead = mapper.readValue(new File("user-modified.json"), Map.class);
+			int depth = (Integer) userDataRead.get("depth");
+			TraversalDescription traversal = Traversal.description().evaluator(Evaluators.atDepth(depth));
+			
+			for (Map<String, String> rel : (List<Map<String, String>>)userDataRead.get("relationships")) {
+				String relationName = rel.get("type");
+				Direction direction = findOutDirection(rel);
+				traversal = traversal.relationships(DynamicRelationshipType.withName(relationName), direction);
+			}
+			
+			Node startNode = db.getNodeById((int)userDataRead.get("start_node"));
+			
+			List<String> nodes = new ArrayList<String>();
+			for (Node node : traversal.traverse(startNode).nodes()) {
+				String name = (String) node.getProperty("name");
+				System.out.println(name);
+				nodes.add(name);
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private static Map<String, Object> buildJsonMap() {
+		Map<String,Object> userData = new HashMap<String,Object>();
+		Map<String,String> rel1 = new HashMap<String,String>();
+		rel1.put("type", "END");
+		rel1.put("direction", "IN");
+		
+		Map<String,String> rel2 = new HashMap<String,String>();
+		rel2.put("type", "BIKE");
+		rel2.put("direction", "OUT");
+
+		List<Map<String, String>> relationships = new ArrayList<Map<String, String>>();
+		relationships.add(rel1); 
+		relationships.add(rel2); 
+		
+		userData.put("relationships", relationships);
+		userData.put("client", "NEO4J");
+		userData.put("depth", 2);
+		userData.put("start_node", 12);
+		return userData;
+	}
+	
+	private static Direction findOutDirection(Map<String, String> rel) {
+		String directionString	= rel.get("direction");
+		Direction direction = null;
+		if (directionString.equalsIgnoreCase("IN")) {
+			direction = Direction.INCOMING;
+		} else {
+			direction = Direction.OUTGOING;
+		}
+		return direction;
+	}
+
+	
 	private static void traversalDeneme() {
-//		StringBuilder sb = new StringBuilder();
 		Node node = db.getNodeById(121);
 		for (Path path : Traversal.description()
 				.relationships(DynamicRelationshipType.withName("END"))
 				.traverse(node)) {
-//			sb.append(path + "\n");
 			System.out.println(path);
 		}
 	}
