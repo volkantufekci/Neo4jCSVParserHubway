@@ -14,6 +14,13 @@ public class CSVColumnPositioner {
 		columns = new ArrayList<String>();
 	}
 	
+	public void addNodeHolders(NodePropertyHolder[] nodeHolders) {
+		for (NodePropertyHolder nodePropertyHolder : nodeHolders) {
+			String[] properties = nodePropertyHolder.getNodePropertyNames();
+			this.addColumns(properties);
+		}
+	}
+	
 	public void addColumns(String[] columnNames){
 		for (String columnName : columnNames) {
 			if (!columns.contains(columnName)) {

@@ -13,4 +13,6 @@ public class Configuration {
 	
 	public static final String RELS_CSV = System.getProperty("user.home") 
 			+ "/rels.csv";
+	
+	public static final int MAX_NODE_COUNT = 553000;
 }

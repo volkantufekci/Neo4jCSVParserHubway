@@ -12,8 +12,8 @@ import com.volkan.Configuration;
 
 public class CSVWriterAsNeo4jStyle {
 
-	public void appendToRelsCSV(String startGid, String endGid, String relType) {
-		String content = startGid + "\t" + endGid + "\t" + relType + "\n";
+	public void appendToRelsCSV(String startGid, String endGid, String relType, int relId) {
+		String content = startGid + "\t" + endGid + "\t" + relType + "\t" + relId + "\n";
 		appendToFile(content, Configuration.RELS_CSV);		
 	}
 	
@@ -36,7 +36,7 @@ public class CSVWriterAsNeo4jStyle {
 	}
 	
 	public void writeHeadersOfRelsCSV() {
-		String headers = "Start\tEnde\tType\n";
+		String headers = "Start\tEnde\tType\tRelId\n";
 		writeToFile(headers, Configuration.RELS_CSV);
 	}
 

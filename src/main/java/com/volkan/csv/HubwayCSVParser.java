@@ -29,6 +29,7 @@ public class HubwayCSVParser {
 		try {
 			fis = new FileInputStream(Configuration.HUBWAY_TRIPS_CSV);
 			br  = new BufferedReader(new InputStreamReader(fis, Charset.forName("UTF-8")));
+			int relId = 1;
 			while ((line = br.readLine()) != null) {
 			    String[] splitted = line.split(",");
 				String startStationId 	= splitted[4];
@@ -43,8 +44,8 @@ public class HubwayCSVParser {
 				Map<String, String> trip = buildTripMap();
 				tripsAndBikes.add(tripAsNodeStructure(trip));
 				
-				csvWriter.appendToRelsCSV(trip.get("gid"), startStation.get("gid"), "START");
-				csvWriter.appendToRelsCSV(trip.get("gid"), endStation.get("gid"), "END");				
+				csvWriter.appendToRelsCSV(trip.get("gid"), startStation.get("gid"), "START", relId++);
+				csvWriter.appendToRelsCSV(trip.get("gid"), endStation.get("gid"), "END", relId++);				
 
 				//bike
 				String bikeId 	= splitted[7];
@@ -56,7 +57,7 @@ public class HubwayCSVParser {
 				} 
 				
 				//trip  -[:BIKE]-> bike relation
-				csvWriter.appendToRelsCSV(trip.get("gid"), bike.get("gid"), "BIKE");
+				csvWriter.appendToRelsCSV(trip.get("gid"), bike.get("gid"), "BIKE", relId++);
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -75,13 +76,15 @@ public class HubwayCSVParser {
 		Map<String, String> trip = new HashMap<String, String>();
 		trip.put("__type__", "Trip");
 		trip.put("gid", gid++ + "");
+		trip.put("name", "Trip");
 		return trip;
 	}
 	private Map<String, String> buildBikeMap(String bikeId) {
 		Map<String, String> bike = new HashMap<String, String>();
 		bike.put("__type__", "Bike");
 		bike.put("gid", gid++ + "");
-		bike.put("bikeId", bikeId);
+//		bike.put("bikeId", bikeId);
+		bike.put("name", bikeId);
 		return bike;
 	}	
 	public Map<String, Map<String, String>> readStationsCSV(){

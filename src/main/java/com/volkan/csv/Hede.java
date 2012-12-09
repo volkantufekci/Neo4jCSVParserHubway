@@ -8,30 +8,24 @@ import java.util.Map;
 public class Hede {
 
 	public static void main(String[] args) {
-		CSVColumnPositioner csvColumnPositioner = new CSVColumnPositioner();
-		CSVWriterAsNeo4jStyle csvWriter = new CSVWriterAsNeo4jStyle();
 		NodePropertyHolder[] nodeHolders = {
 				new StationNodePropertyHolder(),
 				new BikeNodePropertyHolder(),
 				new TripNodePropertyHolder()
 		};
-
-		for (NodePropertyHolder nodePropertyHolder : nodeHolders) {
-			String[] properties = nodePropertyHolder.getNodePropertyNames();
-			csvColumnPositioner.addColumns(properties);
-		}
-
+		CSVColumnPositioner csvColumnPositioner = new CSVColumnPositioner();
+		csvColumnPositioner.addNodeHolders(nodeHolders);
 		
 		HubwayCSVParser hubwayCSVParser = new HubwayCSVParser();		
 		Map<String, Map<String, String>> stations = hubwayCSVParser.readStationsCSV();
 		List<NodeStructure> stationNodeStructures = new ArrayList<NodeStructure>();
 		for (Map<String, String> station : stations.values()) {
-			NodeStructure nodeStructure = 
-					new NodeStructure(station, new StationNodePropertyHolder());
-			stationNodeStructures.add(nodeStructure);
+			stationNodeStructures.add(new NodeStructure(
+											station, new StationNodePropertyHolder()));
 		}
 		
 		//Write Headers to nodes.csv and rels.csv
+		CSVWriterAsNeo4jStyle csvWriter = new CSVWriterAsNeo4jStyle();
 		csvWriter.writeHeadersOfNodesCSV(csvColumnPositioner.toString());
 		csvWriter.writeHeadersOfRelsCSV();
 		
