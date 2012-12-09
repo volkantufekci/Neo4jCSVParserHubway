@@ -33,3 +33,4 @@ local.properties
 *.ear
 
 target/
+src/main/resources/
