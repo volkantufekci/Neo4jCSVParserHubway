@@ -3,6 +3,14 @@
   <groupId>com.volkan</groupId>
   <artifactId>neowithmaven20121016</artifactId>
   <version>0.0.1-SNAPSHOT</version>
+  
+ <repositories>
+  <repository>
+   <id>codehaus-snapshots</id>
+   <url>http://snapshots.repository.codehaus.org</url>
+  </repository>
+ </repositories>
+   
   <dependencies>
     <dependency>
       <groupId>org.neo4j</groupId>
@@ -10,6 +18,11 @@
       <version>1.8</version>
       <scope>compile</scope>
     </dependency>
+  	<dependency>
+ 		<groupId>org.codehaus.jackson</groupId>
+ 		<artifactId>jackson-mapper-asl</artifactId>
+ 		<version>1.9.11</version>
+ 	</dependency>
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
