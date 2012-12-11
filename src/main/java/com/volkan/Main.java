@@ -22,10 +22,19 @@ import org.neo4j.graphdb.Path;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
+import org.neo4j.graphdb.traversal.BranchState;
+import org.neo4j.graphdb.traversal.Evaluation;
+import org.neo4j.graphdb.traversal.Evaluator;
 import org.neo4j.graphdb.traversal.Evaluators;
 import org.neo4j.graphdb.traversal.TraversalDescription;
+import org.neo4j.kernel.OrderedByTypeExpander;
 import org.neo4j.kernel.Traversal;
 
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientHandlerException;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.UniformInterfaceException;
+import com.sun.jersey.api.client.WebResource;
 import com.volkan.csv.NodePropertyHolder;
 import com.volkan.csv.StationNodePropertyHolder;
 
@@ -51,7 +60,7 @@ public class Main {
 		}
 
 		ExecutionEngine engine = new ExecutionEngine(db);
-		int hede = 6;
+		int hede = 5;
 		switch (hede) {
 		case 0:
 			test10NodeFetch(engine);
@@ -74,8 +83,28 @@ public class Main {
 		case 6:
 			jacksonDeneme();
 			break;
+		case 7:
+			jsonClient();
+			break;
 		default:
 			break;
+		}
+	}
+	
+	private static void jsonClient() {
+		Client client = Client.create();
+		WebResource webResource = client.resource("http://localhost:8474/example/service/volkan");
+		ObjectMapper mapper = new ObjectMapper();
+		
+		try {
+			Map<String,Object> jsonMap = mapper.readValue(new File("user-modified.json"), Map.class);
+			ClientResponse clientResponse = 
+					webResource.type("application/json")
+							   .post(ClientResponse.class, mapper.writeValueAsString(jsonMap));
+			
+			System.out.println(clientResponse.getEntity(String.class));
+		} catch (UniformInterfaceException | ClientHandlerException | IOException e) {
+			e.printStackTrace();
 		}
 	}
 	
@@ -83,17 +112,17 @@ public class Main {
 		ObjectMapper mapper = new ObjectMapper();
 		try {
 //			mapper.writeValue(new File("user-modified.json"), userData);
-			Map<String,Object> userDataRead = mapper.readValue(new File("user-modified.json"), Map.class);
-			int depth = (Integer) userDataRead.get("depth");
+			Map<String,Object> jsonMap = mapper.readValue(new File("user-modified.json"), Map.class);
+			int depth = (Integer) jsonMap.get("depth");
 			TraversalDescription traversal = Traversal.description().evaluator(Evaluators.atDepth(depth));
 			
-			for (Map<String, String> rel : (List<Map<String, String>>)userDataRead.get("relationships")) {
+			for (Map<String, String> rel : (List<Map<String, String>>)jsonMap.get("relationships")) {
 				String relationName = rel.get("type");
 				Direction direction = findOutDirection(rel);
 				traversal = traversal.relationships(DynamicRelationshipType.withName(relationName), direction);
 			}
 			
-			Node startNode = db.getNodeById((int)userDataRead.get("start_node"));
+			Node startNode = db.getNodeById((int)jsonMap.get("start_node"));
 			
 			List<String> nodes = new ArrayList<String>();
 			for (Node node : traversal.traverse(startNode).nodes()) {
@@ -140,12 +169,42 @@ public class Main {
 
 	
 	private static void traversalDeneme() {
-		Node node = db.getNodeById(121);
+		Node node = db.getNodeById(52220);
+		int i = 0; int toDepth = 3;
+//		OrderedByTypeExpander mexpander = new OrderedByTypeExpander();
+//		mexpander.add(DynamicRelationshipType.withName("BIKE"), Direction.OUTGOING);
 		for (Path path : Traversal.description()
-				.relationships(DynamicRelationshipType.withName("END"))
+				.relationships(DynamicRelationshipType.withName("BIKE"), Direction.OUTGOING)
+				.relationships(DynamicRelationshipType.withName("BIKE"), Direction.INCOMING)
+				.relationships(DynamicRelationshipType.withName("END"), Direction.OUTGOING)
+				.evaluator(Evaluators.fromDepth(1)).evaluator(Evaluators.toDepth(toDepth))
+				.evaluator(new Main.ShadowEvaluator())
 				.traverse(node)) {
-			System.out.println(path);
+				Node endNode = path.endNode();
+//				if (path.length() < toDepth && isShadow(endNode)) {
+//					String gid = (String) endNode.getProperty("Gid");
+					System.out.println("id: " + endNode.getId() + "\t" + isShadow(endNode) + "\t" + path );
+//				}
+			i++;		
 		}
+		System.out.println(i);
+	}
+	
+	public static class ShadowEvaluator implements Evaluator{
+
+		@Override
+		public Evaluation evaluate(Path path) {
+			if (isShadow(path.endNode())) {
+				return Evaluation.INCLUDE_AND_PRUNE;
+			} else {
+				return Evaluation.INCLUDE_AND_CONTINUE;
+			}
+		}
+		
+	}
+
+	private static boolean isShadow(Node endNode) {
+		return (boolean)endNode.getProperty("Shadow");
 	}
 
 	private static void getMostUsedStationsConnections(ExecutionEngine engine) {
@@ -287,24 +346,6 @@ public class Main {
 			// }
 		}
 	}
-
-	// List<String> columns = result.columns();
-	// System.out.println( columns );
-
-	// This outputs:
-	//
-	// [n, n.name]
-	// To fetch the result items in a single column, do like this:
-	//
-	// Iterator<Node> n_column = result.columnAs( "n" );
-	// for ( Node node : IteratorUtil.asIterable( n_column ) )
-	// {
-	// // note: we're grabbing the name property from the node,
-	// // not from the n.name in this case.
-	// String nodeResult = node + ": " + node.getProperty( "name" );
-	// System.out.println( nodeResult );
-	// }
-	// In this case there’s only one node in the result:
 
 	private static void registerShutdownHook() {
 		// Registers a shutdown hook for the Neo4j instance so that it
