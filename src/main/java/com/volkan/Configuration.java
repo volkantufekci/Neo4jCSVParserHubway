@@ -15,4 +15,6 @@ public class Configuration {
 			+ "/rels.csv";
 	
 	public static final int MAX_NODE_COUNT = 553000;
+	
+	public static final String BASE_URL_OF_NEO4J_INSTANCES = "http://localhost";
 }

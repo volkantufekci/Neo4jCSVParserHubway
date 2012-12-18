@@ -7,9 +7,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.neo4j.cypher.javacompat.ExecutionEngine;
@@ -20,21 +22,15 @@ import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Path;
 import org.neo4j.graphdb.Relationship;
-import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
-import org.neo4j.graphdb.traversal.BranchState;
+import org.neo4j.graphdb.index.Index;
+import org.neo4j.graphdb.index.IndexHits;
+import org.neo4j.graphdb.index.IndexManager;
 import org.neo4j.graphdb.traversal.Evaluation;
 import org.neo4j.graphdb.traversal.Evaluator;
 import org.neo4j.graphdb.traversal.Evaluators;
-import org.neo4j.graphdb.traversal.TraversalDescription;
-import org.neo4j.kernel.OrderedByTypeExpander;
 import org.neo4j.kernel.Traversal;
 
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientHandlerException;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.UniformInterfaceException;
-import com.sun.jersey.api.client.WebResource;
 import com.volkan.csv.NodePropertyHolder;
 import com.volkan.csv.StationNodePropertyHolder;
 
@@ -50,17 +46,17 @@ public class Main {
 		registerShutdownHook();
 
 		// add some data first
-		Transaction tx = db.beginTx();
-		try {
-			Node refNode = db.getReferenceNode();
-			refNode.setProperty("name", "reference node");
-			tx.success();
-		} finally {
-			tx.finish();
-		}
+//		Transaction tx = db.beginTx();
+//		try {
+//			Node refNode = db.getReferenceNode();
+//			refNode.setProperty("name", "reference node");
+//			tx.success();
+//		} finally {
+//			tx.finish();
+//		}
 
 		ExecutionEngine engine = new ExecutionEngine(db);
-		int hede = 5;
+		int hede = 6;
 		switch (hede) {
 		case 0:
 			test10NodeFetch(engine);
@@ -78,97 +74,63 @@ public class Main {
 			getMostUsedStationsConnections(engine);
 			break;
 		case 5:
-			traversalDeneme();
+			traverseWithShadowEvaluator();
 			break;
 		case 6:
-			jacksonDeneme();
+			traverseViaJsonMap(readJsonFileIntoMap("testhop.json"));
 			break;
 		case 7:
-			jsonClient();
+			String port = "7474";
+			String url	= "http://localhost";
+			delegateQueryToAnotherNeo4j(url, port, readJsonFileIntoMap("testhop.json"));
+			break;
+		case 8:
+			indexFetchDeneme();
 			break;
 		default:
 			break;
 		}
 	}
-	
-	private static void jsonClient() {
-		Client client = Client.create();
-		WebResource webResource = client.resource("http://localhost:8474/example/service/volkan");
-		ObjectMapper mapper = new ObjectMapper();
-		
-		try {
-			Map<String,Object> jsonMap = mapper.readValue(new File("user-modified.json"), Map.class);
-			ClientResponse clientResponse = 
-					webResource.type("application/json")
-							   .post(ClientResponse.class, mapper.writeValueAsString(jsonMap));
-			
-			System.out.println(clientResponse.getEntity(String.class));
-		} catch (UniformInterfaceException | ClientHandlerException | IOException e) {
-			e.printStackTrace();
-		}
+
+	private static void indexFetchDeneme() {
+		IndexManager index = db.index();
+		Index<Node> usersIndex = index.forNodes("users");
+		IndexHits<Node> hits = usersIndex.get("Gid", 1904);
+		Node node = hits.getSingle();
+		System.out.println(node);
 	}
-	
-	private static void jacksonDeneme() {
+
+	protected static Map<String, Object> readJsonFileIntoMap(String fileName) {
 		ObjectMapper mapper = new ObjectMapper();
+		Map<String, Object> jsonMap	= null;
 		try {
-//			mapper.writeValue(new File("user-modified.json"), userData);
-			Map<String,Object> jsonMap = mapper.readValue(new File("user-modified.json"), Map.class);
-			int depth = (Integer) jsonMap.get("depth");
-			TraversalDescription traversal = Traversal.description().evaluator(Evaluators.atDepth(depth));
-			
-			for (Map<String, String> rel : (List<Map<String, String>>)jsonMap.get("relationships")) {
-				String relationName = rel.get("type");
-				Direction direction = findOutDirection(rel);
-				traversal = traversal.relationships(DynamicRelationshipType.withName(relationName), direction);
-			}
-			
-			Node startNode = db.getNodeById((int)jsonMap.get("start_node"));
-			
-			List<String> nodes = new ArrayList<String>();
-			for (Node node : traversal.traverse(startNode).nodes()) {
-				String name = (String) node.getProperty("name");
-				System.out.println(name);
-				nodes.add(name);
-			}
+			jsonMap = mapper.readValue(new File(fileName), Map.class);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-	}
-
-	private static Map<String, Object> buildJsonMap() {
-		Map<String,Object> userData = new HashMap<String,Object>();
-		Map<String,String> rel1 = new HashMap<String,String>();
-		rel1.put("type", "END");
-		rel1.put("direction", "IN");
-		
-		Map<String,String> rel2 = new HashMap<String,String>();
-		rel2.put("type", "BIKE");
-		rel2.put("direction", "OUT");
-
-		List<Map<String, String>> relationships = new ArrayList<Map<String, String>>();
-		relationships.add(rel1); 
-		relationships.add(rel2); 
-		
-		userData.put("relationships", relationships);
-		userData.put("client", "NEO4J");
-		userData.put("depth", 2);
-		userData.put("start_node", 12);
-		return userData;
+		return jsonMap;
 	}
 	
-	private static Direction findOutDirection(Map<String, String> rel) {
-		String directionString	= rel.get("direction");
-		Direction direction = null;
-		if (directionString.equalsIgnoreCase("IN")) {
-			direction = Direction.INCOMING;
-		} else {
-			direction = Direction.OUTGOING;
-		}
-		return direction;
+	private static void delegateQueryToAnotherNeo4j(String url, String port, 
+													Map<String, Object> jsonMap) {	
+		RestConnector restConnector = new RestConnector(url, port);
+		String result = restConnector.delegateQuery(jsonMap);
+		System.out.println(result);
+	}
+	
+	private static void traverseViaJsonMap(Map<String, Object> jsonMap) {
+		List<String> resultJson = new ArrayList<String>();
+
+		TraverseHelper traverseHelper = new TraverseHelper();
+		resultJson = traverseHelper.traverse(db, jsonMap);
+		
+		System.out.println(resultJson);
 	}
 
-	
-	private static void traversalDeneme() {
+	private static void traverseWithShadowEvaluator() {
+		Set<Node> shadowResults = new HashSet<Node>();
+		Set<String> realResults 	= new HashSet<String>();
+		
 		Node node = db.getNodeById(52220);
 		int i = 0; int toDepth = 3;
 //		OrderedByTypeExpander mexpander = new OrderedByTypeExpander();
@@ -181,13 +143,21 @@ public class Main {
 				.evaluator(new Main.ShadowEvaluator())
 				.traverse(node)) {
 				Node endNode = path.endNode();
-//				if (path.length() < toDepth && isShadow(endNode)) {
+				if (path.length() < toDepth) {
 //					String gid = (String) endNode.getProperty("Gid");
+					shadowResults.add(endNode);
 					System.out.println("id: " + endNode.getId() + "\t" + isShadow(endNode) + "\t" + path );
-//				}
+					String port = (String) endNode.getProperty("Real");
+//					delegateQueryToAnotherNeo4j(url, port, jsonMap);
+				} else {
+					realResults.add((String) endNode.getProperty("Name"));
+				}
 			i++;		
 		}
 		System.out.println(i);
+		for (String name : realResults) {
+			System.out.println(name);
+		}
 	}
 	
 	public static class ShadowEvaluator implements Evaluator{
