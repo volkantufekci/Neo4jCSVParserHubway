@@ -1,10 +1,12 @@
 package com.volkan;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.codehaus.jackson.map.ObjectMapper;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.DynamicRelationshipType;
 import org.neo4j.graphdb.GraphDatabaseService;
@@ -26,27 +28,26 @@ public class TraverseHelper {
 		int toDepth = (Integer) jsonMap.get("depth");
 		TraversalDescription traversalDesc = buildTraversalDescFromJsonMap(jsonMap);
 		
-//		Node startNode = db.getNodeById((int) jsonMap.get("start_node"));
 		Node startNode = fetchStartNodeFromIndex(db, jsonMap);
 		
 		for (Path path : traversalDesc.evaluator(new ShadowEvaluator())
 									  .traverse(startNode)) {
 			Node endNode = path.endNode();
 			if (path.length() < toDepth && isShadow(endNode)) {
-				System.out.println("id: " + endNode.getId() + "\t" + isShadow(endNode) + "\t"+path);
-				String delegatedResults = delegateQueryToAnotherNeo4j(path, jsonMap);
-				realResults.add(delegatedResults);
+				System.out.println("id: " + endNode.getId() + "\t" 
+										+ isShadow(endNode) + "\t"+path);
+				List<String> delegatedResults = delegateQueryToAnotherNeo4j(path, jsonMap);
+				for (String delegatedResult : delegatedResults) {
+					realResults.add( path + " ~ " + delegatedResult );
+				}
 			} else {
-				realResults.add((String) endNode.getProperty("Port")
-								+ "-"
-								+ (String) endNode.getProperty("Gid")
-								+ "\n");
+				realResults.add( path + " # " + (String) endNode.getProperty("Port") + "-"
+											  + (String) endNode.getProperty("Gid") );
 			}
 		}
 
 		return realResults;
 	}
-
 	
 	/** 
 	 * A Neo4j instance only knows the Gid and real partition's port of a node but
@@ -59,6 +60,7 @@ public class TraverseHelper {
 	 * @return startNode
 	 */
 	private Node fetchStartNodeFromIndex(GraphDatabaseService db, Map<String, Object> jsonMap) {
+//		Node startNode = db.getNodeById((int) jsonMap.get("start_node"));
 		IndexManager index = db.index();
 		Index<Node> usersIndex = index.forNodes("users");
 		IndexHits<Node> hits = usersIndex.get("Gid", (int) jsonMap.get("start_node"));
@@ -74,7 +76,7 @@ public class TraverseHelper {
 		return traversalDesc;
 	}
 
-	private String delegateQueryToAnotherNeo4j(Path path, Map<String, Object> jsonMap) {
+	private List<String> delegateQueryToAnotherNeo4j(Path path, Map<String, Object> jsonMap) {
 		Map<String, Object> jsonMapClone = new HashMap<String, Object>();
 		@SuppressWarnings("unchecked")
 		List<Map<String, String>> rels = (List<Map<String, String>>) jsonMap.get("relationships");
@@ -88,7 +90,23 @@ public class TraverseHelper {
 		jsonMapClone.put("start_node", new Integer((String)endNode.getProperty("Gid")));
 		String port = (String) endNode.getProperty("Port");
 		RestConnector restConnector = new RestConnector(port);
-		return restConnector.delegateQuery(jsonMapClone);
+		String jsonString = restConnector.delegateQuery(jsonMapClone);
+		List<String> resultList = convertJsonStringToList(jsonString);
+		
+		return resultList; 
+	}
+
+	private List<String> convertJsonStringToList(String jsonString) {
+		ObjectMapper mapper = new ObjectMapper();
+		List<String> resultList = new ArrayList<>();
+		try {
+			@SuppressWarnings("unchecked")
+			List<String> jsonList = mapper.readValue(jsonString, List.class);
+			resultList.addAll(jsonList);
+		} catch (IOException e) {
+			resultList.add("jsonString could not be read");
+		}
+		return resultList;
 	}
 
 	TraversalDescription addDepth(Map<String, Object> jsonMap, TraversalDescription traversal) {

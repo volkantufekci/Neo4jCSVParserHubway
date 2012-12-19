@@ -124,7 +124,9 @@ public class Main {
 		TraverseHelper traverseHelper = new TraverseHelper();
 		resultJson = traverseHelper.traverse(db, jsonMap);
 		
-		System.out.println(resultJson);
+		for (String result : resultJson) {
+			System.out.println(result);
+		}
 	}
 
 	private static void traverseWithShadowEvaluator() {
