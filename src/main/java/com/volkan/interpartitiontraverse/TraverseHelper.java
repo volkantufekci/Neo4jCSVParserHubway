@@ -84,7 +84,7 @@ public class TraverseHelper {
 		return resultList; 
 	}
 
-	private void increaseHops(Map<String, Object> jsonMap, Map<String, Object> jsonMapClone) {
+	protected void increaseHops(Map<String, Object> jsonMap, Map<String, Object> jsonMapClone) {
 		//Indicates how many additional hops performed in order to fulfill the query
 		int hops = 0;
 		if (jsonMap.containsKey("hops")) {

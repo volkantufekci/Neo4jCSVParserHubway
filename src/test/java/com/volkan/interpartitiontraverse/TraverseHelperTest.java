@@ -1,4 +1,4 @@
-package com.volkan;
+package com.volkan.interpartitiontraverse;
 
 import static org.junit.Assert.*;
 
@@ -23,6 +23,16 @@ public class TraverseHelperTest {
 
 	@After
 	public void tearDown() throws Exception {
+	}
+	
+	@Test
+	public final void testIncreaseHops() {
+		Map<String, Object> jsonMap = buildJsonMap();
+		Map<String, Object> jsonMapClone = new HashMap<>();
+		traverseHelper.increaseHops(jsonMap, jsonMapClone);
+		int expected = (int) jsonMap.get("hops") + 1;
+		int actual   = (int) jsonMapClone.get("hops");
+		assertEquals("Hop is not increased", expected, actual);
 	}
 	
 	@Test
@@ -73,6 +83,7 @@ public class TraverseHelperTest {
 		userData.put("client", "NEO4J");
 		userData.put("depth", 3);
 		userData.put("start_node", 12);
+		userData.put("hops", 0);
 		return userData;
 	}
 
