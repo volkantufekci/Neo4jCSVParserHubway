@@ -33,6 +33,8 @@ import org.neo4j.kernel.Traversal;
 
 import com.volkan.csv.NodePropertyHolder;
 import com.volkan.csv.StationNodePropertyHolder;
+import com.volkan.interpartitiontraverse.RestConnector;
+import com.volkan.interpartitiontraverse.TraverseHelper;
 
 public class Main {
 
@@ -44,16 +46,6 @@ public class Main {
 
 		db = new GraphDatabaseFactory().newEmbeddedDatabase(DB_PATH);
 		registerShutdownHook();
-
-		// add some data first
-//		Transaction tx = db.beginTx();
-//		try {
-//			Node refNode = db.getReferenceNode();
-//			refNode.setProperty("name", "reference node");
-//			tx.success();
-//		} finally {
-//			tx.finish();
-//		}
 
 		ExecutionEngine engine = new ExecutionEngine(db);
 		int hede = 6;
@@ -100,6 +92,7 @@ public class Main {
 		System.out.println(node);
 	}
 
+	@SuppressWarnings("unchecked")
 	protected static Map<String, Object> readJsonFileIntoMap(String fileName) {
 		ObjectMapper mapper = new ObjectMapper();
 		Map<String, Object> jsonMap	= null;
@@ -149,7 +142,7 @@ public class Main {
 //					String gid = (String) endNode.getProperty("Gid");
 					shadowResults.add(endNode);
 					System.out.println("id: " + endNode.getId() + "\t" + isShadow(endNode) + "\t" + path );
-					String port = (String) endNode.getProperty("Real");
+//					String port = (String) endNode.getProperty("Real");
 //					delegateQueryToAnotherNeo4j(url, port, jsonMap);
 				} else {
 					realResults.add((String) endNode.getProperty("Name"));
