@@ -24,23 +24,54 @@ public class TraverseHelper {
 		Node startNode = fetchStartNodeFromIndex(db, jsonMap);
 
 		int toDepth = (Integer) jsonMap.get("depth");
-		for (Path path : traversalDes.evaluator(new ShadowEvaluator())
-									 .traverse(startNode)) {
+		for (Path path : traversalDes.traverse(startNode)) {
 			Node endNode = path.endNode();
-			if (path.length() < toDepth && ShadowEvaluator.isShadow(endNode)) {
-//				System.out.println("id: " + endNode.getId() + "\t" 
-//										  + ShadowEvaluator.isShadow(endNode) + "\t"+path);
+			if (didShadowComeInUnfinishedPath(toDepth, path, endNode)) {
 				List<String> delegatedResults = delegateQueryToAnotherNeo4j(path, jsonMap);
-				for (String delegatedResult : delegatedResults) {
-					realResults.add( path + " ~ " + delegatedResult );
-				}
+				realResults.addAll( appendDelegatedResultsToPath( path, delegatedResults ));
 			} else {
-				realResults.add( path + " # " + (String) endNode.getProperty("Port") + "-"
-											  + (String) endNode.getProperty("Gid") );
+				if (path.length() >= toDepth) { //if it is a finished path
+					realResults.add( appendEndingToFinishedPath(jsonMap, path, endNode) );
+				} //else, a real node but unfinished path. No need to care
 			}
 		}
 
 		return realResults;
+	}
+	
+	/**
+	 * A shadow node came across within an unfinished path, 
+	 * maybe at the beginning of a path or in the middle.
+	 * 
+	 * @param toDepth max depth of the specified query
+	 * @param path current path for the traversal
+	 * @param endNode of the path's current situation
+	 * @return true means query should be delegated
+	 */
+	private boolean didShadowComeInUnfinishedPath(int toDepth, Path path,
+			Node endNode) {
+		return path.length() < toDepth && ShadowEvaluator.isShadow(endNode);
+	}
+
+	private List<String> appendDelegatedResultsToPath( 
+				Path path, List<String> delegatedResults) {
+		
+		List<String> results = new ArrayList<>();
+		for (String delegatedResult : delegatedResults) {
+			results.add( path + "~" + delegatedResult );
+		}
+		
+		return results;
+	}
+	
+	private String appendEndingToFinishedPath( 
+				Map<String, Object> jsonMap, Path path, Node endNode) {
+		
+		return path + " # " 
+					+ endNode.getProperty("Port") + "-"
+					+ endNode.getProperty("Gid") 
+					+ "Additional hop count: " 
+					+ jsonMap.get("hops");
 	}
 	
 	/** 
@@ -102,7 +133,7 @@ public class TraverseHelper {
 			List<String> jsonList = mapper.readValue(jsonString, List.class);
 			resultList.addAll(jsonList);
 		} catch (IOException e) {
-			resultList.add("jsonString could not be read");
+			resultList.add("jsonString could not be read" + e + "\n" + jsonString);
 		}
 		return resultList;
 	}
