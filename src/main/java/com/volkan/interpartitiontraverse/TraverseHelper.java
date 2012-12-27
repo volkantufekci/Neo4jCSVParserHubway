@@ -1,12 +1,10 @@
 package com.volkan.interpartitiontraverse;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.codehaus.jackson.map.ObjectMapper;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Path;
@@ -14,8 +12,13 @@ import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.index.IndexHits;
 import org.neo4j.graphdb.index.IndexManager;
 import org.neo4j.graphdb.traversal.TraversalDescription;
+import org.neo4j.kernel.impl.util.StringLogger;
+
+import com.volkan.Utility;
 
 public class TraverseHelper {
+	
+	private final StringLogger logger = StringLogger.logger(Utility.buildLogFileName());
 	
 	public List<String> traverse(GraphDatabaseService db, Map<String, Object> jsonMap) {
 		List<String> realResults = new ArrayList<String>();
@@ -25,6 +28,7 @@ public class TraverseHelper {
 
 		int toDepth = (Integer) jsonMap.get("depth");
 		for (Path path : traversalDes.traverse(startNode)) {
+			logger.logMessage(path.toString() + " # " + path.length(), true);
 			Node endNode = path.endNode();
 			if (didShadowComeInUnfinishedPath(toDepth, path, endNode)) {
 				List<String> delegatedResults = delegateQueryToAnotherNeo4j(path, jsonMap);
@@ -53,12 +57,12 @@ public class TraverseHelper {
 		return path.length() < toDepth && ShadowEvaluator.isShadow(endNode);
 	}
 
-	private List<String> appendDelegatedResultsToPath( 
-				Path path, List<String> delegatedResults) {
-		
+	private List<String> appendDelegatedResultsToPath(Path path, List<String> delegatedResults) {
+		Node endNode = path.endNode();
+		String port = (String) endNode.getProperty("Port");
 		List<String> results = new ArrayList<>();
 		for (String delegatedResult : delegatedResults) {
-			results.add( path + "~" + delegatedResult );
+			results.add( path + "~{" + port + "}" + delegatedResult );
 		}
 		
 		return results;
@@ -69,8 +73,8 @@ public class TraverseHelper {
 		
 		return path + " # " 
 					+ endNode.getProperty("Port") + "-"
-					+ endNode.getProperty("Gid") 
-					+ "Additional hop count: " 
+					+ endNode.getProperty("Gid") + " # "  
+					+ "Hop count: " 
 					+ jsonMap.get("hops");
 	}
 	
@@ -110,7 +114,7 @@ public class TraverseHelper {
 		String port = (String) endNode.getProperty("Port");
 		RestConnector restConnector = new RestConnector(port);
 		String jsonString = restConnector.delegateQuery(jsonMapClone);
-		List<String> resultList = convertJsonStringToList(jsonString);
+		List<String> resultList = JsonHelper.convertJsonStringToList(jsonString);
 		
 		return resultList; 
 	}
@@ -124,36 +128,6 @@ public class TraverseHelper {
 		hops++;
 		jsonMapClone.put("hops", hops);
 	}
-
-	private List<String> convertJsonStringToList(String jsonString) {
-		ObjectMapper mapper = new ObjectMapper();
-		List<String> resultList = new ArrayList<>();
-		try {
-			@SuppressWarnings("unchecked")
-			List<String> jsonList = mapper.readValue(jsonString, List.class);
-			resultList.addAll(jsonList);
-		} catch (IOException e) {
-			resultList.add("jsonString could not be read" + e + "\n" + jsonString);
-		}
-		return resultList;
-	}
-
-//	public class ShadowEvaluator implements Evaluator{
-//
-//		@Override
-//		public Evaluation evaluate(Path path) {
-//			if (isShadow(path.endNode())) {
-//				return Evaluation.INCLUDE_AND_PRUNE;
-//			} else {
-//				return Evaluation.INCLUDE_AND_CONTINUE;
-//			}
-//		}
-//		
-//	}
-//
-//	private boolean isShadow(Node endNode) {
-//		return (boolean)endNode.getProperty("Shadow");
-//	}
 
 	/**
 	 * Prunes the given rels List. Removes the relations up to toDepth.
