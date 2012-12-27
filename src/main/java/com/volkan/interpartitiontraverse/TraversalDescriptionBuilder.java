@@ -8,6 +8,7 @@ import org.neo4j.graphdb.DynamicRelationshipType;
 import org.neo4j.graphdb.traversal.Evaluators;
 import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.neo4j.kernel.Traversal;
+import org.neo4j.kernel.Uniqueness;
 
 public class TraversalDescriptionBuilder {
 	private TraversalDescription traversalDescription;
@@ -17,6 +18,7 @@ public class TraversalDescriptionBuilder {
 		builder.addDepth(jsonMap);
 		builder.addRelationships(jsonMap);
 		builder.addShadowEvaluator();
+		builder.addUniqueness();
 		return builder.build();
 	}
 
@@ -55,6 +57,10 @@ public class TraversalDescriptionBuilder {
 	
 	private void addShadowEvaluator() {
 		traversalDescription = traversalDescription.evaluator(new ShadowEvaluator());
+	}
+	
+	private void addUniqueness() {
+		traversalDescription = traversalDescription.uniqueness(Uniqueness.NONE);
 	}
 	
 	public TraversalDescription build() {
