@@ -30,25 +30,28 @@ import org.neo4j.graphdb.traversal.Evaluation;
 import org.neo4j.graphdb.traversal.Evaluator;
 import org.neo4j.graphdb.traversal.Evaluators;
 import org.neo4j.kernel.Traversal;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.volkan.csv.NodePropertyHolder;
 import com.volkan.csv.StationNodePropertyHolder;
+import com.volkan.interpartitiontraverse.JsonHelper;
 import com.volkan.interpartitiontraverse.RestConnector;
 import com.volkan.interpartitiontraverse.TraverseHelper;
 
 public class Main {
 
+	private static final Logger logger = LoggerFactory.getLogger(Main.class);
 	private static final String DB_PATH = "./src/main/resources/graph.db";
-
 	private static GraphDatabaseService db;
-
+	
 	public static void main(String[] args) {
 
 		db = new GraphDatabaseFactory().newEmbeddedDatabase(DB_PATH);
 		registerShutdownHook();
 
 		ExecutionEngine engine = new ExecutionEngine(db);
-		int hede = 6;
+		int hede = 7;
 		switch (hede) {
 		case 0:
 			test10NodeFetch(engine);
@@ -107,8 +110,11 @@ public class Main {
 	private static void delegateQueryToAnotherNeo4j(String url, String port, 
 													Map<String, Object> jsonMap) {	
 		RestConnector restConnector = new RestConnector(url, port);
-		String result = restConnector.delegateQuery(jsonMap);
-		System.out.println(result);
+		String jsonString = restConnector.delegateQuery(jsonMap);
+		List<String> resultList = JsonHelper.convertJsonStringToList(jsonString);
+		for (String result : resultList) {
+			logger.info(result);
+		}
 	}
 	
 	private static void traverseViaJsonMap(Map<String, Object> jsonMap) {
