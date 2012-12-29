@@ -9,7 +9,7 @@ public class ShadowEvaluator implements Evaluator{
 
 	@Override
 	public Evaluation evaluate(Path path) {
-		if ((boolean) path.endNode().getProperty("Shadow")) {
+		if ( (boolean) path.endNode().getProperty(PropertyNameConstants.SHADOW, false) ) {
 			return Evaluation.INCLUDE_AND_PRUNE;
 		} else {
 			return Evaluation.INCLUDE_AND_CONTINUE;
@@ -17,6 +17,6 @@ public class ShadowEvaluator implements Evaluator{
 	}
 	
 	public static boolean isShadow(Node endNode) {
-		return (boolean)endNode.getProperty("Shadow");
+		return (boolean)endNode.getProperty(PropertyNameConstants.SHADOW, false);
 	}
 }
