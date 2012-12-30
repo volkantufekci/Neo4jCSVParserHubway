@@ -22,12 +22,9 @@ import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Path;
 import org.neo4j.graphdb.Relationship;
-import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.index.IndexHits;
 import org.neo4j.graphdb.index.IndexManager;
-import org.neo4j.graphdb.traversal.Evaluation;
-import org.neo4j.graphdb.traversal.Evaluator;
 import org.neo4j.graphdb.traversal.Evaluators;
 import org.neo4j.kernel.Traversal;
 import org.slf4j.Logger;
@@ -37,6 +34,7 @@ import com.volkan.csv.NodePropertyHolder;
 import com.volkan.csv.StationNodePropertyHolder;
 import com.volkan.interpartitiontraverse.JsonHelper;
 import com.volkan.interpartitiontraverse.RestConnector;
+import com.volkan.interpartitiontraverse.ShadowEvaluator;
 import com.volkan.interpartitiontraverse.TraverseHelper;
 
 public class Main {
@@ -47,27 +45,26 @@ public class Main {
 	
 	public static void main(String[] args) {
 
-		db = new GraphDatabaseFactory().newEmbeddedDatabase(DB_PATH);
-		registerShutdownHook();
-
-		ExecutionEngine engine = new ExecutionEngine(db);
+//		db = new GraphDatabaseFactory().newEmbeddedDatabase(DB_PATH);
+//		registerShutdownHook();
+//		ExecutionEngine engine = new ExecutionEngine(db);
 		int hede = 7;
 		switch (hede) {
-		case 0:
-			test10NodeFetch(engine);
-			break;
-		case 1:
-			testMostUsedStations(engine);
-			break;
-		case 2:
-			testPrintingOrdersOfColumns(engine);
-			break;
-		case 3:
-			test10RelFetch(engine);
-			break;
-		case 4:
-			getMostUsedStationsConnections(engine);
-			break;
+//		case 0:
+//			test10NodeFetch(engine);
+//			break;
+//		case 1:
+//			testMostUsedStations(engine);
+//			break;
+//		case 2:
+//			testPrintingOrdersOfColumns(engine);
+//			break;
+//		case 3:
+//			test10RelFetch(engine);
+//			break;
+//		case 4:
+//			getMostUsedStationsConnections(engine);
+//			break;
 		case 5:
 			traverseWithShadowEvaluator();
 			break;
@@ -109,12 +106,16 @@ public class Main {
 	
 	private static void delegateQueryToAnotherNeo4j(String url, String port, 
 													Map<String, Object> jsonMap) {	
+		long start = System.currentTimeMillis();
 		RestConnector restConnector = new RestConnector(url, port);
 		String jsonString = restConnector.delegateQuery(jsonMap);
 		List<String> resultList = JsonHelper.convertJsonStringToList(jsonString);
 		for (String result : resultList) {
 			logger.info(result);
 		}
+		
+		long end = System.currentTimeMillis();
+		logger.info(end - start + " miliseconds passed, " + "result.size= " + resultList.size());
 	}
 	
 	private static void traverseViaJsonMap(Map<String, Object> jsonMap) {
@@ -141,13 +142,14 @@ public class Main {
 				.relationships(DynamicRelationshipType.withName("BIKE"), Direction.INCOMING)
 				.relationships(DynamicRelationshipType.withName("END"), Direction.OUTGOING)
 				.evaluator(Evaluators.fromDepth(1)).evaluator(Evaluators.toDepth(toDepth))
-				.evaluator(new Main.ShadowEvaluator())
+				.evaluator(new ShadowEvaluator())
 				.traverse(node)) {
 				Node endNode = path.endNode();
 				if (path.length() < toDepth) {
 //					String gid = (String) endNode.getProperty("Gid");
 					shadowResults.add(endNode);
-					System.out.println("id: " + endNode.getId() + "\t" + isShadow(endNode) + "\t" + path );
+					System.out.println("id: " + endNode.getId() + "\t" 
+										+ ShadowEvaluator.isShadow(endNode) + "\t" + path );
 //					String port = (String) endNode.getProperty("Real");
 //					delegateQueryToAnotherNeo4j(url, port, jsonMap);
 				} else {
@@ -161,22 +163,22 @@ public class Main {
 		}
 	}
 	
-	public static class ShadowEvaluator implements Evaluator{
-
-		@Override
-		public Evaluation evaluate(Path path) {
-			if (isShadow(path.endNode())) {
-				return Evaluation.INCLUDE_AND_PRUNE;
-			} else {
-				return Evaluation.INCLUDE_AND_CONTINUE;
-			}
-		}
-		
-	}
-
-	private static boolean isShadow(Node endNode) {
-		return (boolean)endNode.getProperty("Shadow");
-	}
+//	public static class ShadowEvaluator implements Evaluator{
+//
+//		@Override
+//		public Evaluation evaluate(Path path) {
+//			if (isShadow(path.endNode())) {
+//				return Evaluation.INCLUDE_AND_PRUNE;
+//			} else {
+//				return Evaluation.INCLUDE_AND_CONTINUE;
+//			}
+//		}
+//		
+//	}
+//
+//	private static boolean isShadow(Node endNode) {
+//		return (boolean)endNode.getProperty("Shadow");
+//	}
 
 	private static void getMostUsedStationsConnections(ExecutionEngine engine) {
 		ExecutionResult result = engine.execute( 
