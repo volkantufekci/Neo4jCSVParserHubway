@@ -24,6 +24,9 @@ public class TraverseHelper {
 		List<String> realResults = new ArrayList<String>();
 		TraversalDescription traversalDes = TraversalDescriptionBuilder.buildFromJsonMap(jsonMap);
 		
+//		8474'e(unpartitioned) ozgu olarak index yerine dogrudan id'den alinmali start_node
+//		cunku 8474'te index yok!
+//		Node startNode = db.getNodeById((int) jsonMap.get("start_node"));
 		Node startNode = fetchStartNodeFromIndex(db, jsonMap);
 
 		int toDepth = (Integer) jsonMap.get("depth");
@@ -59,7 +62,7 @@ public class TraverseHelper {
 
 	private List<String> appendDelegatedResultsToPath(Path path, List<String> delegatedResults) {
 		Node endNode = path.endNode();
-		String port = (String) endNode.getProperty("Port");
+		String port = (String) endNode.getProperty(PropertyNameConstants.PORT);
 		List<String> results = new ArrayList<>();
 		for (String delegatedResult : delegatedResults) {
 			results.add( path + "~{" + port + "}" + delegatedResult );
@@ -72,8 +75,8 @@ public class TraverseHelper {
 				Map<String, Object> jsonMap, Path path, Node endNode) {
 		
 		return path + " # " 
-					+ endNode.getProperty("Port") + "-"
-					+ endNode.getProperty("Gid") + " # "  
+					+ endNode.getProperty(PropertyNameConstants.PORT, "NA") + "-"
+					+ endNode.getProperty(PropertyNameConstants.GID) + " # "  
 					+ "Hop count: " 
 					+ jsonMap.get("hops");
 	}
@@ -92,7 +95,7 @@ public class TraverseHelper {
 //		Node startNode = db.getNodeById((int) jsonMap.get("start_node"));
 		IndexManager index = db.index();
 		Index<Node> usersIndex = index.forNodes("users");
-		IndexHits<Node> hits = usersIndex.get("Gid", (int) jsonMap.get("start_node"));
+		IndexHits<Node> hits = usersIndex.get(PropertyNameConstants.GID, (int) jsonMap.get("start_node"));
 		Node startNode = hits.getSingle();
 		return startNode;
 	}
@@ -110,8 +113,8 @@ public class TraverseHelper {
 		jsonMapClone.put("depth", newDepth);
 		
 		Node endNode = path.endNode();
-		jsonMapClone.put("start_node", new Integer((String)endNode.getProperty("Gid")));
-		String port = (String) endNode.getProperty("Port");
+		jsonMapClone.put("start_node", new Integer((String)endNode.getProperty(PropertyNameConstants.GID)));
+		String port = (String) endNode.getProperty(PropertyNameConstants.PORT);
 		RestConnector restConnector = new RestConnector(port);
 		String jsonString = restConnector.delegateQuery(jsonMapClone);
 		List<String> resultList = JsonHelper.convertJsonStringToList(jsonString);
