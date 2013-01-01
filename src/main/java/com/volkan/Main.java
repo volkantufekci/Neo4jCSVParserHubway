@@ -2,8 +2,10 @@ package com.volkan;
 
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -32,6 +34,7 @@ import org.slf4j.LoggerFactory;
 
 import com.volkan.csv.NodePropertyHolder;
 import com.volkan.csv.StationNodePropertyHolder;
+import com.volkan.db.H2Helper;
 import com.volkan.interpartitiontraverse.JsonHelper;
 import com.volkan.interpartitiontraverse.RestConnector;
 import com.volkan.interpartitiontraverse.ShadowEvaluator;
@@ -48,7 +51,7 @@ public class Main {
 //		db = new GraphDatabaseFactory().newEmbeddedDatabase(DB_PATH);
 //		registerShutdownHook();
 //		ExecutionEngine engine = new ExecutionEngine(db);
-		int hede = 7;
+		int hede = 9;
 		switch (hede) {
 //		case 0:
 //			test10NodeFetch(engine);
@@ -79,8 +82,59 @@ public class Main {
 		case 8:
 			indexFetchDeneme();
 			break;
+		case 9:
+			generateJob("testhop.json");
+			break;
+		case 10:
+			updateJob(1l);
+			break;
 		default:
 			break;
+		}
+	}
+
+	private static void updateJob(long jobID) {
+		String cypherResult = "";
+		try {
+			cypherResult = readEntireFile("./src/main/resources/log/logFile.2012-12-24_19-35.log");
+			new H2Helper().updateJobWithResults(jobID, cypherResult);
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		}
+		logger.info("updateJob finished");
+	}
+	
+    private static String readEntireFile(String filename) throws IOException {
+        FileReader in = new FileReader(filename);
+        StringBuilder contents = new StringBuilder();
+        char[] buffer = new char[4096];
+        int read = 0;
+        do {
+            contents.append(buffer, 0, read);
+            read = in.read(buffer);
+        } while (read >= 0);
+        return contents.toString();
+    }
+
+	private static void generateJob(String fileName) {
+		ObjectMapper mapper = new ObjectMapper();
+		String json = null;
+		try {
+			json = mapper.writeValueAsString(readJsonFileIntoMap(fileName));
+			H2Helper h2Helper = new H2Helper();
+			long jobIDWithoutParent = 0;
+			long newJobID = h2Helper.generateJob(jobIDWithoutParent, json);
+			logger.info("newJobID = " + newJobID);
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		} catch (SQLException e) {
+			e.printStackTrace();
 		}
 	}
 
