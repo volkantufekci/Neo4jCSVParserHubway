@@ -9,6 +9,7 @@ import java.sql.SQLException;
 
 public class H2Helper {
 
+	private static final String table = " VTEST ";
 	private Connection con;
 
 	public void updateJobWithResults(long jobID, String cypherResult) throws SQLException {
@@ -26,8 +27,7 @@ public class H2Helper {
 			throw new SQLException("Job could not be updated", e);
 		}
 		
-		if(prepStatement != null)
-			prepStatement.close();
+		closePreparedStatement(prepStatement);
 	}
 
 	public void updateParentOfJob(long jobID) throws SQLException {
@@ -41,18 +41,31 @@ public class H2Helper {
 					"Updating parent of job failed, no rows affected.");
 		}
 		
-		if(prepStatement != null)
-			prepStatement.close();
+		closePreparedStatement(prepStatement);
 	}
-	
+
+	public void updateJobMarkAsDeleted(long jobID) throws SQLException {
+		String sql = "UPDATE " +table+ " SET IS_DELETED = TRUE WHERE ID = ?";
+		PreparedStatement prepStatement = con.prepareStatement(sql);
+		prepStatement.setLong(1, jobID);
+		int affectedRows = prepStatement.executeUpdate();
+
+		closePreparedStatement(prepStatement);
+		
+		if (affectedRows == 0) {
+			throw new SQLException(
+					"Updating job mark as deleted failed, no rows affected.");
+		}
+	}
+
 	public long generateJob(long parentJobID, String traversalQuery) {
 		ResultSet resultSet = null;
 		PreparedStatement prepStatement = null;
 		long generatedJobID = 0;
 		try {
 			// prepared statement
-			prepStatement = con.prepareStatement("INSERT INTO VTEST (PARENT_ID, VQUERY) " +
-												 "VALUES (?,?)");
+			prepStatement = con.prepareStatement("INSERT INTO " +table+ 
+												 " (PARENT_ID, VQUERY) VALUES (?,?)");
 			prepStatement.setLong(1, parentJobID);
 			prepStatement.setString(2, traversalQuery);
 			int affectedRows = prepStatement.executeUpdate();
@@ -70,7 +83,7 @@ public class H2Helper {
 			updateParentOfJob(generatedJobID);
 			
 			try {
-				resultSet.close();
+				closeResultSet(resultSet);
 			} catch (SQLException e) {
 				e.printStackTrace();
 			}
@@ -88,6 +101,29 @@ public class H2Helper {
 		return generatedJobID;
 	}
 	
+	public VJobEntity getJob(long jobID) throws SQLException {
+		VJobEntity vJobEntity = new VJobEntity();
+		
+		String sql = "SELECT * FROM " + table + " WHERE ID = ?";
+		PreparedStatement preparedStatement = con.prepareStatement(sql);
+		preparedStatement.setLong(1, jobID);
+		ResultSet rs = preparedStatement.executeQuery();
+		if (rs.next()) {
+			vJobEntity.id = rs.getLong("ID");
+			vJobEntity.is_deleted 	= rs.getBoolean("IS_DELETED");
+			vJobEntity.parent_id 	= rs.getLong("PARENT_ID");
+			vJobEntity.vquery 		= rs.getString("VQUERY");
+			vJobEntity.vresult 		= rs.getString("VRESULT");
+		} else {
+			throw new SQLException("No job found with ID = " + jobID);
+		}
+		
+		closeResultSet(rs);
+		closePreparedStatement(preparedStatement);
+		
+		return vJobEntity;
+	}
+
 	public H2Helper() throws ClassNotFoundException, SQLException {
 		con = getConnection();
 	}
@@ -99,6 +135,16 @@ public class H2Helper {
 		// Connection con = DriverManager.getConnection("jdbc:h2:mem:mytest", "sa", "");
 		Connection con = DriverManager.getConnection("jdbc:h2:tcp://localhost/~/test", "sa","");
 		return con;
+	}
+
+	private void closePreparedStatement(PreparedStatement prepStatement) throws SQLException {
+		if(prepStatement != null)
+			prepStatement.close();
+	}
+
+	private void closeResultSet(ResultSet rs) throws SQLException {
+		if(rs != null)
+			rs.close();
 	}
 	
 	public void closeConnection() throws SQLException {
