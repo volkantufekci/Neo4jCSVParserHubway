@@ -100,6 +100,10 @@ public class H2Helper {
 		Connection con = DriverManager.getConnection("jdbc:h2:tcp://localhost/~/test", "sa","");
 		return con;
 	}
+	
+	public void closeConnection() throws SQLException {
+		con.close();
+	}
 }
 
 // insert 10 row data

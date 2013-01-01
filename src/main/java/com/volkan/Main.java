@@ -51,7 +51,7 @@ public class Main {
 //		db = new GraphDatabaseFactory().newEmbeddedDatabase(DB_PATH);
 //		registerShutdownHook();
 //		ExecutionEngine engine = new ExecutionEngine(db);
-		int hede = 9;
+		int hede = 10;
 		switch (hede) {
 //		case 0:
 //			test10NodeFetch(engine);
@@ -86,18 +86,20 @@ public class Main {
 			generateJob("testhop.json");
 			break;
 		case 10:
-			updateJob(1l);
+			updateJobWithCypherResult(1l);
 			break;
 		default:
 			break;
 		}
 	}
 
-	private static void updateJob(long jobID) {
+	private static void updateJobWithCypherResult(long jobID) {
 		String cypherResult = "";
 		try {
 			cypherResult = readEntireFile("./src/main/resources/log/logFile.2012-12-24_19-35.log");
-			new H2Helper().updateJobWithResults(jobID, cypherResult);
+			H2Helper h2Helper = new H2Helper();
+			h2Helper.updateJobWithResults(jobID, cypherResult);
+			h2Helper.closeConnection();
 		} catch (IOException e) {
 			e.printStackTrace();
 		} catch (SQLException e) {
@@ -129,6 +131,7 @@ public class Main {
 			long jobIDWithoutParent = 0;
 			long newJobID = h2Helper.generateJob(jobIDWithoutParent, json);
 			logger.info("newJobID = " + newJobID);
+			h2Helper.closeConnection();
 		} catch (IOException e) {
 			e.printStackTrace();
 		} catch (ClassNotFoundException e) {
