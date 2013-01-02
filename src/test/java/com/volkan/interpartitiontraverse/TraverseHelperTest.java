@@ -81,7 +81,7 @@ public class TraverseHelperTest {
 		
 		userData.put("relationships", relationships);
 		userData.put("client", "NEO4J");
-		userData.put("depth", 3);
+		userData.put(JsonKeyConstants.DEPTH, 3);
 		userData.put("start_node", 12);
 		userData.put("hops", 0);
 		return userData;
