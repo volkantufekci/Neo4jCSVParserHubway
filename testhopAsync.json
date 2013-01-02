@@ -1,0 +1,1 @@
+{"start_node":553000,"client":"NEO4J","relationships":[{"direction":"OUT","type":"BIKE"},{"direction":"IN","type":"BIKE"},{"direction":"OUT","type":"END"}],"depth":3,"job_id":32, "parent_job_id":32, "path":""}
