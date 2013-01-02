@@ -27,7 +27,7 @@ public class TraversalDescriptionBuilder {
 	}
 	
 	private void addDepth(Map<String, Object> jsonMap) {
-		int depth = (Integer) jsonMap.get("depth");
+		int depth = (Integer) jsonMap.get(JsonKeyConstants.DEPTH);
 		traversalDescription = 
 				traversalDescription.evaluator(Evaluators.fromDepth(1))
 									.evaluator(Evaluators.toDepth(depth));

@@ -42,4 +42,24 @@ public class RestConnector {
 		
 		return result;
 	}
+	
+	public String delegateQueryWithoutResult(Map<String,Object> jsonMap){
+		String result = "";
+		Client client = Client.create();
+		WebResource webResource = client.resource(urlHostAndPort
+				+ "example/service/volkan_async");
+		ObjectMapper mapper = new ObjectMapper();
+
+		try {
+			ClientResponse clientResponse = 
+					webResource.type("application/json")
+					   .post(ClientResponse.class, mapper.writeValueAsString(jsonMap));
+			result = clientResponse.getEntity(String.class);
+		} catch (UniformInterfaceException | ClientHandlerException | IOException e) {
+			e.printStackTrace();
+		}
+		
+		return result;
+	}
+	
 }
