@@ -6,6 +6,8 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class H2Helper {
 
@@ -58,50 +60,36 @@ public class H2Helper {
 		}
 	}
 
-	public long generateJob(long parentJobID, String traversalQuery) {
+	public long generateJob(long parentJobID, String traversalQuery) throws SQLException {
 		ResultSet resultSet = null;
 		PreparedStatement prepStatement = null;
 		long generatedJobID = 0;
-		try {
-			// prepared statement
-			prepStatement = con.prepareStatement("INSERT INTO " +table+ 
-												 " (PARENT_ID, VQUERY) VALUES (?,?)");
-			prepStatement.setLong(1, parentJobID);
-			prepStatement.setString(2, traversalQuery);
-			int affectedRows = prepStatement.executeUpdate();
-			if (affectedRows == 0) {
-				throw new SQLException("Creating job failed, no rows affected.");
-			}
 
-			resultSet = prepStatement.getGeneratedKeys();
-			if (resultSet.next()) {
-				generatedJobID = resultSet.getLong(1);
-			} else {
-				throw new SQLException("Creating job failed, no generated key obtained.");
-			}
-			
-			updateParentOfJob(generatedJobID);
-			
-			try {
-				closeResultSet(resultSet);
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}
-			
-			try {
-				prepStatement.close();
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}
-
-		} catch (Exception e) {
-			e.printStackTrace();
+		// prepared statement
+		prepStatement = con.prepareStatement("INSERT INTO " + table
+				+ " (PARENT_ID, VQUERY) VALUES (?,?)");
+		prepStatement.setLong(1, parentJobID);
+		prepStatement.setString(2, traversalQuery);
+		int affectedRows = prepStatement.executeUpdate();
+		if (affectedRows == 0) {
+			throw new SQLException("Creating job failed, no rows affected.");
 		}
+
+		resultSet = prepStatement.getGeneratedKeys();
+		if (resultSet.next()) {
+			generatedJobID = resultSet.getLong(1);
+		} else {
+			throw new SQLException(
+					"Creating job failed, no generated key obtained.");
+		}
+
+		closeResultSet(resultSet);
+		prepStatement.close();
 		
 		return generatedJobID;
 	}
 	
-	public VJobEntity getJob(long jobID) throws SQLException {
+	public VJobEntity fetchJob(long jobID) throws SQLException {
 		VJobEntity vJobEntity = new VJobEntity();
 		
 		String sql = "SELECT * FROM " + table + " WHERE ID = ?";
@@ -122,6 +110,40 @@ public class H2Helper {
 		closePreparedStatement(preparedStatement);
 		
 		return vJobEntity;
+	}
+	
+	public List<VJobEntity> fetchJobNotDeletedWithParentID(long parentID) throws SQLException {
+		
+		List<VJobEntity> results = new ArrayList<VJobEntity>();
+		
+		String sql = "SELECT * FROM " + table + 
+					 " WHERE PARENT_ID = ? AND IS_DELETED = FALSE";
+		PreparedStatement preparedStatement = con.prepareStatement(sql);
+		preparedStatement.setLong(1, parentID);
+		ResultSet rs = preparedStatement.executeQuery();
+		while (rs.next()) {
+			VJobEntity vJobEntity = new VJobEntity();
+			vJobEntity.id = rs.getLong("ID");
+			vJobEntity.is_deleted 	= rs.getBoolean("IS_DELETED");
+			vJobEntity.parent_id 	= rs.getLong("PARENT_ID");
+			vJobEntity.vquery 		= rs.getString("VQUERY");
+			vJobEntity.vresult 		= rs.getString("VRESULT");
+			results.add(vJobEntity);
+		} 
+		
+		closeResultSet(rs);
+		closePreparedStatement(preparedStatement);
+		return results;
+	}
+	
+	int deleteAll() throws SQLException {
+		int affectedRows = 0;
+		
+		String sql = "DELETE FROM " + table;
+		PreparedStatement ps = con.prepareStatement(sql);
+		affectedRows = ps.executeUpdate();
+		
+		return affectedRows;
 	}
 
 	public H2Helper() throws ClassNotFoundException, SQLException {
@@ -150,6 +172,7 @@ public class H2Helper {
 	public void closeConnection() throws SQLException {
 		con.close();
 	}
+
 }
 
 // insert 10 row data

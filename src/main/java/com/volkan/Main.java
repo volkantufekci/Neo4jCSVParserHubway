@@ -130,6 +130,8 @@ public class Main {
 			H2Helper h2Helper = new H2Helper();
 			long jobIDWithoutParent = 0;
 			long newJobID = h2Helper.generateJob(jobIDWithoutParent, json);
+			// This job does not have a parent which means its ID must be set as PARENT_ID
+			h2Helper.updateParentOfJob(newJobID);
 			logger.info("newJobID = " + newJobID);
 			h2Helper.closeConnection();
 		} catch (IOException e) {
