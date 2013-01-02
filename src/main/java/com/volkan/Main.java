@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 import com.volkan.csv.NodePropertyHolder;
 import com.volkan.csv.StationNodePropertyHolder;
 import com.volkan.db.H2Helper;
+import com.volkan.db.VJobEntity;
 import com.volkan.interpartitiontraverse.JsonHelper;
 import com.volkan.interpartitiontraverse.RestConnector;
 import com.volkan.interpartitiontraverse.ShadowEvaluator;
@@ -51,7 +52,7 @@ public class Main {
 //		db = new GraphDatabaseFactory().newEmbeddedDatabase(DB_PATH);
 //		registerShutdownHook();
 //		ExecutionEngine engine = new ExecutionEngine(db);
-		int hede = 10;
+		int hede = 12;
 		switch (hede) {
 //		case 0:
 //			test10NodeFetch(engine);
@@ -88,11 +89,27 @@ public class Main {
 		case 10:
 			updateJobWithCypherResult(1l);
 			break;
+		case 11:
+			String portt = "8474";
+			delegateQueryAsync(portt, readJsonFileIntoMap("testhopAsync.json"));
+		case 12:
+			readClob(32);
 		default:
 			break;
 		}
 	}
 
+	private static void readClob(long jobID){
+		H2Helper h2Helper;
+		try {
+			h2Helper = new H2Helper();
+			VJobEntity vJobEntity = h2Helper.fetchJob(jobID);
+			System.out.println(vJobEntity.getVresult());
+			h2Helper.closeConnection();
+		} catch (ClassNotFoundException | SQLException e) {
+			e.printStackTrace();
+		}
+	}
 	private static void updateJobWithCypherResult(long jobID) {
 		String cypherResult = "";
 		try {
@@ -175,6 +192,15 @@ public class Main {
 		
 		long end = System.currentTimeMillis();
 		logger.info(end - start + " miliseconds passed, " + "result.size= " + resultList.size());
+	}
+
+	private static void delegateQueryAsync(String port, Map<String, Object> jsonMap) {
+		long start = System.currentTimeMillis();
+		RestConnector restConnector = new RestConnector(port);
+		logger.info(restConnector.delegateQueryWithoutResult(jsonMap));
+
+		long end = System.currentTimeMillis();
+		logger.info(end - start + " miliseconds passed" );
 	}
 	
 	private static void traverseViaJsonMap(Map<String, Object> jsonMap) {
