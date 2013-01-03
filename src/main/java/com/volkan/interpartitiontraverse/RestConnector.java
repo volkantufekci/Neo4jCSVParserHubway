@@ -57,6 +57,7 @@ public class RestConnector {
 			result = clientResponse.getEntity(String.class);
 		} catch (UniformInterfaceException | ClientHandlerException | IOException e) {
 			e.printStackTrace();
+			result = e.toString();
 		}
 		
 		return result;
