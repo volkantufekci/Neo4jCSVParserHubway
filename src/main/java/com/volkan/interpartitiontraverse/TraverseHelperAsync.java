@@ -17,7 +17,7 @@ import com.volkan.db.H2Helper;
 
 public class TraverseHelperAsync extends AbstractTraverseHelper {
 
-	private final StringLogger logger = StringLogger.logger(Utility.buildLogFileName());
+	private final StringLogger neo4jLogger = StringLogger.logger(Utility.buildLogFileName());
 	private final H2Helper h2Helper;
 	
 	public TraverseHelperAsync(H2Helper h2Helper) throws ClassNotFoundException, SQLException {
@@ -29,38 +29,50 @@ public class TraverseHelperAsync extends AbstractTraverseHelper {
 		List<String> realResults = new ArrayList<String>();
 		TraversalDescription traversalDes = TraversalDescriptionBuilder.buildFromJsonMap(jsonMap);
 	
-		Node startNode = db.getNodeById((int) jsonMap.get("start_node"));
-//		Node startNode = fetchStartNodeFromIndex(db, jsonMap);
+//		Node startNode = db.getNodeById((int) jsonMap.get("start_node"));
+		Node startNode = fetchStartNodeFromIndex(db, jsonMap);
 
 		String previousPath = (String) jsonMap.get(JsonKeyConstants.PATH);
-		int toDepth = (Integer) jsonMap.get(JsonKeyConstants.DEPTH);
+		int toDepth 		= (Integer) jsonMap.get(JsonKeyConstants.DEPTH);
 		for (Path path : traversalDes.traverse(startNode)) {
-			logger.logMessage(path.toString() + " # " + path.length(), true);
+//			neo4jLogger.logMessage(path.toString() + " # " + path.length(), true);
 			Node endNode = path.endNode();
 			if (didShadowComeInUnfinishedPath(toDepth, path, endNode)) {
 				delegateQueryToAnotherNeo4j(path, jsonMap);
 			} else {
 				if (path.length() >= toDepth) { //if it is a finished path
-					realResults.add(
-							previousPath+ " " +appendEndingToFinishedPath(jsonMap, path, endNode) );
+					realResults.add( previousPath + " " + 
+									 appendEndingToFinishedPath(jsonMap, path, endNode) );
 				} //else, a real node but unfinished path. No need to care
 			}
 		}
 
+		updateDBWithResults(jsonMap, realResults);
+		return realResults;
+	}
+
+	private void updateDBWithResults(Map<String, Object> jsonMap, List<String> realResults) {
+		String resultString = convertResultsListToString(realResults);
+		
+		long jobID = (int) jsonMap.get(JsonKeyConstants.JOB_ID);
+		try {
+			neo4jLogger.logMessage("updateDBWithResults is called. resultString.length=" 
+									+ resultString.length(), true);
+			h2Helper.updateJobWithResults(jobID, resultString);
+		} catch (SQLException e) {
+			e.printStackTrace();
+			neo4jLogger.logMessage(e.toString(), true);
+			realResults.clear();
+			realResults.add(e.toString());
+		}
+	}
+
+	private String convertResultsListToString(List<String> realResults) {
 		StringBuilder sb = new StringBuilder();
 		for (String result : realResults) {
 			sb.append(result + "\n");
 		}
-		
-		long jobID = (int) jsonMap.get(JsonKeyConstants.JOB_ID);
-		try {
-			h2Helper.updateJobWithResults(jobID, sb.toString());
-		} catch (SQLException e) {
-			e.printStackTrace();
-			logger.logMessage(e.toString(), true);
-			realResults.add(e.toString());
-		}
-		return realResults;
+		return sb.toString();
 	}
 	
 	protected void delegateQueryToAnotherNeo4j(Path path, Map<String, Object> jsonMap) {
@@ -84,7 +96,7 @@ public class TraverseHelperAsync extends AbstractTraverseHelper {
 			delegateQueryOverRestAsync(port, jsonMapClone);
 		} catch (SQLException e) {
 			e.printStackTrace();
-			logger.logMessage(e.toString());
+			neo4jLogger.logMessage(e.toString());
 		}
 	}
 
@@ -96,7 +108,7 @@ public class TraverseHelperAsync extends AbstractTraverseHelper {
 
 	private long copyParentJobID(Map<String, Object> jsonMap,
 			Map<String, Object> jsonMapClone) {
-		long parentJobID = (long) jsonMap.get(JsonKeyConstants.PARENT_JOB_ID);
+		long parentJobID = (int) jsonMap.get(JsonKeyConstants.PARENT_JOB_ID);
 		jsonMapClone.put(JsonKeyConstants.PARENT_JOB_ID, parentJobID);
 		return parentJobID;
 	}
@@ -105,14 +117,14 @@ public class TraverseHelperAsync extends AbstractTraverseHelper {
 		jsonMapClone.put(JsonKeyConstants.PATH, path.toString());
 	}
 
-	private void delegateQueryOverRestAsync(final String port,
-			final Map<String, Object> jsonMapClone) {
+	private void delegateQueryOverRestAsync(
+			final String port, final Map<String, Object> jsonMapClone) {
 		Thread t = new Thread(new Runnable() {
 
 			@Override
 			public void run() {
 				RestConnector restConnector = new RestConnector(port);
-				restConnector.delegateQuery(jsonMapClone);
+				restConnector.delegateQueryWithoutResult(jsonMapClone);
 			}
 		});
 
