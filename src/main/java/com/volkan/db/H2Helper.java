@@ -11,11 +11,11 @@ import java.util.List;
 
 public class H2Helper {
 
-	private static final String table = " VTEST ";
+	private static String table = " NEORESULTS ";
 	private Connection con;
 
 	public void updateJobWithResults(long jobID, String cypherResult) throws SQLException {
-		String sql = "UPDATE VTEST SET VRESULT = ? WHERE ID = ?";
+		String sql = "UPDATE " +table+ " SET VRESULT = ? WHERE ID = ?";
 		PreparedStatement prepStatement = null;
 		try {
 			prepStatement = con.prepareStatement(sql);
@@ -33,7 +33,7 @@ public class H2Helper {
 	}
 
 	public void updateParentOfJob(long jobID) throws SQLException {
-		String sql = "UPDATE VTEST SET PARENT_ID = ? WHERE ID = ?";
+		String sql = "UPDATE " +table+ " SET PARENT_ID = ? WHERE ID = ?";
 		PreparedStatement prepStatement = con.prepareStatement(sql);
 		prepStatement.setLong(1, jobID);
 		prepStatement.setLong(2, jobID);
@@ -60,6 +60,42 @@ public class H2Helper {
 		}
 	}
 
+	public void updateJobsMarkAsDeleted(List<Long> jobIDs) throws SQLException {
+		StringBuilder sql = new StringBuilder("UPDATE " +table+ " SET IS_DELETED = TRUE WHERE ");
+		sql.append(buildWhereClauseForIDList(jobIDs));
+		
+		PreparedStatement prepStatement = con.prepareStatement(sql.toString());
+		
+		for (int i = 0; i < jobIDs.size(); i++) {
+			prepStatement.setLong(i + 1, jobIDs.get(i));
+		}
+		
+		int affectedRows = prepStatement.executeUpdate();
+
+		closePreparedStatement(prepStatement);
+		
+		if (affectedRows == 0) {
+			throw new SQLException(
+					"Updating job mark as deleted failed, no rows affected.");
+		}
+	}
+
+	protected String buildWhereClauseForIDList(List<Long> jobIDs) throws SQLException {
+		StringBuilder sb = new StringBuilder();
+		
+		if (jobIDs.isEmpty()) {
+			throw new SQLException("An empty jobIDs list is passed!");
+		} else {//List holds more than 1 element
+			sb.append(" (ID = ?");
+			for (int i = 0; i < jobIDs.size() - 1; i++) {
+				sb.append(" OR ID = ?");
+			}
+			sb.append(") ");
+		}
+		
+		return sb.toString();
+	}
+	
 	public long generateJob(long parentJobID, String traversalQuery) throws SQLException {
 		ResultSet resultSet = null;
 		PreparedStatement prepStatement = null;
@@ -117,7 +153,7 @@ public class H2Helper {
 		List<VJobEntity> results = new ArrayList<VJobEntity>();
 		
 		String sql = "SELECT * FROM " + table + 
-					 " WHERE PARENT_ID = ? AND IS_DELETED = FALSE";
+					 " WHERE PARENT_ID = ? AND IS_DELETED = FALSE AND VRESULT IS NOT NULL";
 		PreparedStatement preparedStatement = con.prepareStatement(sql);
 		preparedStatement.setLong(1, parentID);
 		ResultSet rs = preparedStatement.executeQuery();
@@ -148,6 +184,11 @@ public class H2Helper {
 
 	public H2Helper() throws ClassNotFoundException, SQLException {
 		con = getConnection();
+	}
+	
+	public H2Helper(String tableName) throws ClassNotFoundException, SQLException {
+		this();
+		table = tableName;
 	}
 
 	private Connection getConnection() throws ClassNotFoundException, SQLException {
