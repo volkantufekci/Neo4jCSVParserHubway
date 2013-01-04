@@ -38,7 +38,7 @@ public class TraverseHelperAsync extends AbstractTraverseHelper {
 //			neo4jLogger.logMessage(path.toString() + " # " + path.length(), true);
 			Node endNode = path.endNode();
 			if (didShadowComeInUnfinishedPath(toDepth, path, endNode)) {
-				delegateQueryToAnotherNeo4j(path, jsonMap);
+				delegateQueryToAnotherNeo4j(previousPath, path, jsonMap);
 			} else {
 				if (path.length() >= toDepth) { //if it is a finished path
 					realResults.add( previousPath + " " + 
@@ -75,7 +75,7 @@ public class TraverseHelperAsync extends AbstractTraverseHelper {
 		return sb.toString();
 	}
 	
-	protected void delegateQueryToAnotherNeo4j(Path path, Map<String, Object> jsonMap) {
+	protected void delegateQueryToAnotherNeo4j(String previousPath, Path path, Map<String, Object> jsonMap) {
 		Map<String, Object> jsonMapClone = new HashMap<String, Object>();
 		
 		updateRelationships(path, jsonMap, jsonMapClone); 
@@ -86,7 +86,7 @@ public class TraverseHelperAsync extends AbstractTraverseHelper {
 		
 		updateStartNode(path, jsonMapClone);
 		
-		updatePath(path, jsonMapClone);
+		updatePath(previousPath, path, jsonMapClone);
 
 		try {
 			long parentJobID = copyParentJobID(jsonMap, jsonMapClone);
@@ -113,8 +113,8 @@ public class TraverseHelperAsync extends AbstractTraverseHelper {
 		return parentJobID;
 	}
 
-	private void updatePath(Path path, Map<String, Object> jsonMapClone) {
-		jsonMapClone.put(JsonKeyConstants.PATH, path.toString());
+	private void updatePath(String previousPath, Path path, Map<String, Object> jsonMapClone) {
+		jsonMapClone.put(JsonKeyConstants.PATH, previousPath +"~"+ path.toString());
 	}
 
 	private void delegateQueryOverRestAsync(
