@@ -2,7 +2,6 @@ package com.volkan;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.SQLException;
@@ -34,9 +33,8 @@ import org.slf4j.LoggerFactory;
 
 import com.volkan.csv.NodePropertyHolder;
 import com.volkan.csv.StationNodePropertyHolder;
-import com.volkan.db.H2Helper;
-import com.volkan.db.VJobEntity;
 import com.volkan.interpartitiontraverse.JsonHelper;
+import com.volkan.interpartitiontraverse.JsonKeyConstants;
 import com.volkan.interpartitiontraverse.RestConnector;
 import com.volkan.interpartitiontraverse.ShadowEvaluator;
 import com.volkan.interpartitiontraverse.TraverseHelper;
@@ -52,7 +50,7 @@ public class Main {
 //		db = new GraphDatabaseFactory().newEmbeddedDatabase(DB_PATH);
 //		registerShutdownHook();
 //		ExecutionEngine engine = new ExecutionEngine(db);
-		int hede = 12;
+		int hede = 11;
 		switch (hede) {
 //		case 0:
 //			test10NodeFetch(engine);
@@ -84,79 +82,33 @@ public class Main {
 			indexFetchDeneme();
 			break;
 		case 9:
-			generateJob("testhop.json");
+			try {
+				new H2Client().generateJob(readJsonFileIntoMap("testhop.json"));
+			} catch (Exception e1) {
+				e1.printStackTrace();
+			}
 			break;
 		case 10:
-			updateJobWithCypherResult(1l);
+			new H2Client().updateJobWithCypherResult(1l);
 			break;
 		case 11:
-			String portt = "8474";
-			delegateQueryAsync(portt, readJsonFileIntoMap("testhopAsync.json"));
+			try {
+				long jobID = new H2Client().generateJob(readJsonFileIntoMap("testhopAsync.json"));
+				Neo4jClientAsync neo4jClientAsync = new Neo4jClientAsync();
+				Map<String, Object> jsonMap = readJsonFileIntoMap("testhopAsync.json");
+				jsonMap.put(JsonKeyConstants.JOB_ID, jobID);
+				jsonMap.put(JsonKeyConstants.PARENT_JOB_ID, jobID);
+				neo4jClientAsync.delegateQueryAsync( "7474", jsonMap );
+				neo4jClientAsync.periodicFetcher((long) jsonMap.get(JsonKeyConstants.PARENT_JOB_ID));
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			break;
 		case 12:
-			readClob(32);
+			new H2Client().readClob(32);
+			break;
 		default:
 			break;
-		}
-	}
-
-	private static void readClob(long jobID){
-		H2Helper h2Helper;
-		try {
-			h2Helper = new H2Helper();
-			VJobEntity vJobEntity = h2Helper.fetchJob(jobID);
-			System.out.println(vJobEntity.getVresult());
-			h2Helper.closeConnection();
-		} catch (ClassNotFoundException | SQLException e) {
-			e.printStackTrace();
-		}
-	}
-	private static void updateJobWithCypherResult(long jobID) {
-		String cypherResult = "";
-		try {
-			cypherResult = readEntireFile("./src/main/resources/log/logFile.2012-12-24_19-35.log");
-			H2Helper h2Helper = new H2Helper();
-			h2Helper.updateJobWithResults(jobID, cypherResult);
-			h2Helper.closeConnection();
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (SQLException e) {
-			e.printStackTrace();
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
-		}
-		logger.info("updateJob finished");
-	}
-	
-    private static String readEntireFile(String filename) throws IOException {
-        FileReader in = new FileReader(filename);
-        StringBuilder contents = new StringBuilder();
-        char[] buffer = new char[4096];
-        int read = 0;
-        do {
-            contents.append(buffer, 0, read);
-            read = in.read(buffer);
-        } while (read >= 0);
-        return contents.toString();
-    }
-
-	private static void generateJob(String fileName) {
-		ObjectMapper mapper = new ObjectMapper();
-		String json = null;
-		try {
-			json = mapper.writeValueAsString(readJsonFileIntoMap(fileName));
-			H2Helper h2Helper = new H2Helper();
-			long jobIDWithoutParent = 0;
-			long newJobID = h2Helper.generateJob(jobIDWithoutParent, json);
-			// This job does not have a parent which means its ID must be set as PARENT_ID
-			h2Helper.updateParentOfJob(newJobID);
-			logger.info("newJobID = " + newJobID);
-			h2Helper.closeConnection();
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
-		} catch (SQLException e) {
-			e.printStackTrace();
 		}
 	}
 
@@ -194,14 +146,6 @@ public class Main {
 		logger.info(end - start + " miliseconds passed, " + "result.size= " + resultList.size());
 	}
 
-	private static void delegateQueryAsync(String port, Map<String, Object> jsonMap) {
-		long start = System.currentTimeMillis();
-		RestConnector restConnector = new RestConnector(port);
-		logger.info(restConnector.delegateQueryWithoutResult(jsonMap));
-
-		long end = System.currentTimeMillis();
-		logger.info(end - start + " miliseconds passed" );
-	}
 	
 	private static void traverseViaJsonMap(Map<String, Object> jsonMap) {
 		List<String> resultJson = new ArrayList<String>();
@@ -247,23 +191,6 @@ public class Main {
 			System.out.println(name);
 		}
 	}
-	
-//	public static class ShadowEvaluator implements Evaluator{
-//
-//		@Override
-//		public Evaluation evaluate(Path path) {
-//			if (isShadow(path.endNode())) {
-//				return Evaluation.INCLUDE_AND_PRUNE;
-//			} else {
-//				return Evaluation.INCLUDE_AND_CONTINUE;
-//			}
-//		}
-//		
-//	}
-//
-//	private static boolean isShadow(Node endNode) {
-//		return (boolean)endNode.getProperty("Shadow");
-//	}
 
 	private static void getMostUsedStationsConnections(ExecutionEngine engine) {
 		ExecutionResult result = engine.execute( 
