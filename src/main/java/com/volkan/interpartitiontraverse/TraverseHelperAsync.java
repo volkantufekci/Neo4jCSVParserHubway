@@ -68,9 +68,13 @@ public class TraverseHelperAsync extends AbstractTraverseHelper {
 	}
 
 	private String convertResultsListToString(List<String> realResults) {
-		StringBuilder sb = new StringBuilder();
+		StringBuilder sb 			= new StringBuilder();
+		boolean hasMultipleResults 	= realResults.size() > 1;
 		for (String result : realResults) {
-			sb.append(result + "\n");
+			sb.append(result);
+			if (hasMultipleResults) {
+				sb.append("\n");
+			}
 		}
 		return sb.toString();
 	}
