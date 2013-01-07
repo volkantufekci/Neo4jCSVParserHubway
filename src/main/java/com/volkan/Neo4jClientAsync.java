@@ -18,16 +18,15 @@ public class Neo4jClientAsync {
 	
 	public void delegateQueryAsync(final String port, final Map<String, Object> jsonMap) {
 
-		Thread t = new Thread(new Runnable() {
-			
-			@Override
-			public void run() {
+//		Thread t = new Thread(new Runnable() {
+//			
+//			@Override
+//			public void run() {
 				RestConnector restConnector = new RestConnector(port);
 				logger.info(restConnector.delegateQueryWithoutResult(jsonMap));
-//				restConnector.delegateQueryWithoutResult(jsonMap);
-			}
-		});
-		t.start();
+//			}
+//		});
+//		t.start();
 		
 	}
 	
@@ -35,11 +34,12 @@ public class Neo4jClientAsync {
 		long start = System.currentTimeMillis();
 		
 		H2Helper h2Helper = new H2Helper();
+		boolean atLeast1ResultFetched = false;
 		while(true) {
 			Thread.sleep(500);
 			
 			List<VJobEntity> list = h2Helper.fetchJobNotDeletedWithParentID(parentID);
-			if (list.isEmpty()) {
+			if (list.isEmpty() && atLeast1ResultFetched) {
 				break;
 			} else {
 				List<Long> jobIDs = new ArrayList<Long>();
@@ -48,6 +48,7 @@ public class Neo4jClientAsync {
 					jobIDs.add(vJobEntity.getId());
 				}
 				h2Helper.updateJobsMarkAsDeleted(jobIDs);
+				atLeast1ResultFetched = true;
 			}
 		}
 		h2Helper.closeConnection();
