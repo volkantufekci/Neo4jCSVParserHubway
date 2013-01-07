@@ -172,7 +172,7 @@ public class H2Helper {
 		return results;
 	}
 	
-	int deleteAll() throws SQLException {
+	public int deleteAll() throws SQLException {
 		int affectedRows = 0;
 		
 		String sql = "DELETE FROM " + table;
