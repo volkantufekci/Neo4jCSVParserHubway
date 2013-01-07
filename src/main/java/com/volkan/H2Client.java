@@ -70,4 +70,10 @@ public class H2Client {
 		h2Helper.closeConnection();
 		return newJobID;
 	}
+	
+	public void deleteAll() throws ClassNotFoundException, SQLException {
+		H2Helper h2Helper = new H2Helper();
+		h2Helper.deleteAll();
+		h2Helper.closeConnection();
+	}
 }
