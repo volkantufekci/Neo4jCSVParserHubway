@@ -93,11 +93,15 @@ public class Main {
 			break;
 		case 11:
 			try {
-				long jobID = new H2Client().generateJob(readJsonFileIntoMap("testhopAsync.json"));
-				Neo4jClientAsync neo4jClientAsync = new Neo4jClientAsync();
+				H2Client h2Client = new H2Client();
+				h2Client.deleteAll();
+				long jobID = h2Client.generateJob(readJsonFileIntoMap("testhopAsync.json"));
+				
 				Map<String, Object> jsonMap = readJsonFileIntoMap("testhopAsync.json");
 				jsonMap.put(JsonKeyConstants.JOB_ID, jobID);
 				jsonMap.put(JsonKeyConstants.PARENT_JOB_ID, jobID);
+				
+				Neo4jClientAsync neo4jClientAsync = new Neo4jClientAsync();
 				neo4jClientAsync.delegateQueryAsync( "7474", jsonMap );
 				neo4jClientAsync.periodicFetcher((long) jsonMap.get(JsonKeyConstants.PARENT_JOB_ID));
 			} catch (Exception e) {
