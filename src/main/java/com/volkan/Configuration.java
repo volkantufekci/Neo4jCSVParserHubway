@@ -1,5 +1,8 @@
 package com.volkan;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 public class Configuration {
 
 	public static final String HUBWAY_STATIONS_CSV = System.getProperty("user.home") 
@@ -7,6 +10,9 @@ public class Configuration {
 	
 	public static final String HUBWAY_TRIPS_CSV = System.getProperty("user.home") 
 												+ "/hubway_original_csv_dir/trips.csv";
+	
+	public static final Path ERDOS_TSV = Paths.get(System.getProperty("user.home"), 
+												"Downloads", "graph.txt"); 
 	
 	public static final String NODES_CSV = System.getProperty("user.home") 
 			+ "/nodes.csv";
