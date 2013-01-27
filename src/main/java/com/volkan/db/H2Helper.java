@@ -9,6 +9,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.volkan.Utility;
+
 public class H2Helper {
 
 	private static String table = " NEORESULTS ";
@@ -196,7 +198,12 @@ public class H2Helper {
 		Class.forName("org.h2.Driver");
 
 		// Connection con = DriverManager.getConnection("jdbc:h2:mem:mytest", "sa", "");
-		Connection con = DriverManager.getConnection("jdbc:h2:tcp://localhost/~/test", "sa","");
+//		Connection con = DriverManager.getConnection("jdbc:h2:tcp://localhost/~/test", "sa","");
+		
+		String connectionString = Utility.getNeo4jURLFromPropertiesForPort("H2connectionstring");
+		String userName 		= Utility.getNeo4jURLFromPropertiesForPort("H2user");
+		String pwd 				= Utility.getNeo4jURLFromPropertiesForPort("H2pwd");
+		Connection con = DriverManager.getConnection(connectionString, userName, pwd);
 		return con;
 	}
 

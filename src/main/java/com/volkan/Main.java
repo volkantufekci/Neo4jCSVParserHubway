@@ -40,7 +40,7 @@ public class Main {
 		ExecutionEngine engine = new ExecutionEngine(db);
 		
 		long start = System.currentTimeMillis();
-		int hede = 0;
+		int hede = 11;
 		try {
 			switch (hede) {
 			case 0:
