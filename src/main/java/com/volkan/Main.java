@@ -6,13 +6,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.neo4j.cypher.javacompat.ExecutionEngine;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.DynamicRelationshipType;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Path;
-import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 import org.neo4j.graphdb.traversal.Evaluators;
 import org.neo4j.kernel.Traversal;
 import org.slf4j.Logger;
@@ -27,17 +25,14 @@ import com.volkan.interpartitiontraverse.TraverseHelper;
 public class Main {
 
 	private static final Logger logger = LoggerFactory.getLogger(Main.class);
-//	private static final String DB_PATH = "./src/main/resources/graph.db";
-//	private static final String DB_PATH = 
-//			"/home/volkan/Development/tez/Neo4jSurumleri/neo4j-community-1.8.M07_eguller/data/graph.db";
-	private static final String DB_PATH = "/home/volkan/erdos8474notindexed.201301151430.graph.db";
+//	private static final String DB_PATH = "/home/volkan/erdos8474notindexed.201301151430.graph.db";
 	private static GraphDatabaseService db;
 	
 	public static void main(String[] args) {
 
-		db = new GraphDatabaseFactory().newEmbeddedDatabase(DB_PATH);
-		registerShutdownHook();
-		ExecutionEngine engine = new ExecutionEngine(db);
+//		db = new GraphDatabaseFactory().newEmbeddedDatabase(DB_PATH);
+//		registerShutdownHook();
+//		ExecutionEngine engine = new ExecutionEngine(db);
 		
 		long start = System.currentTimeMillis();
 		int hede = 11;
@@ -47,20 +42,8 @@ public class Main {
 //				Neo4jClient.getNodesWithMostFriendsFromEgullerTwitterDB(engine);
 //				Neo4jClient.myFriendDepth3(db);
 //				ErdosWebGraphImporter.readBigFile();
-				new Neo4jClient().getMostFollowedErdos(db);
+//				new Neo4jClient().getMostFollowedErdos(db);
 				break;
-//			case 1:
-//				testMostUsedStations(engine);
-//				break;
-//			case 2:
-//				testPrintingOrdersOfColumns(engine);
-//				break;
-//			case 3:
-//				test10RelFetch(engine);
-//				break;
-//			case 4:
-//				getMostUsedStationsConnections(engine);
-//				break;
 			case 5:
 				traverseWithShadowEvaluator();
 				break;
@@ -167,6 +150,7 @@ public class Main {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	private static void registerShutdownHook() {
 		// Registers a shutdown hook for the Neo4j instance so that it
 		// shuts down nicely when the VM exits (even if you "Ctrl-C" the
