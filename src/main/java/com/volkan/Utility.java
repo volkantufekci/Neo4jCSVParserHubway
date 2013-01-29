@@ -35,12 +35,19 @@ public class Utility {
 		String defaultValue = Configuration.BASE_URL_OF_NEO4J_INSTANCES + ":" + port;
 		String propertyValue = defaultValue;
 		
+		propertyValue = getValueOfProperty(port, defaultValue);
+		
+		return propertyValue + "/";
+	}
+	
+	public static String getValueOfProperty(String property, String defaultValue) {
+		String propertyValue = "";
 		FileInputStream in = null;
 		try {
 			in = new FileInputStream("conf/interpartitiontraverse.properties");
 			Properties properties = new Properties();
 			properties.load(in);
-			propertyValue = properties.getProperty(port, defaultValue);
+			propertyValue = properties.getProperty(property, defaultValue);
 		} catch (IOException e) {
 			logger.error("conf/interpartitiontraverse.properties could not be read!" );
 			e.printStackTrace();
@@ -53,8 +60,7 @@ public class Utility {
 				}
 			}
 		}
-		
-		return propertyValue + "/";
+		return propertyValue;
 	}
 
 }
