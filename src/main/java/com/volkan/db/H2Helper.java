@@ -199,10 +199,12 @@ public class H2Helper {
 
 		// Connection con = DriverManager.getConnection("jdbc:h2:mem:mytest", "sa", "");
 //		Connection con = DriverManager.getConnection("jdbc:h2:tcp://localhost/~/test", "sa","");
+		String defaultConnectionString = "jdbc:h2:tcp://localhost/~/test";
+		String connectionString = 
+					Utility.getValueOfProperty("H2connectionstring", defaultConnectionString);
 		
-		String connectionString = Utility.getNeo4jURLFromPropertiesForPort("H2connectionstring");
-		String userName 		= Utility.getNeo4jURLFromPropertiesForPort("H2user");
-		String pwd 				= Utility.getNeo4jURLFromPropertiesForPort("H2pwd");
+		String userName = Utility.getValueOfProperty("H2user", "sa");
+		String pwd 		= Utility.getValueOfProperty("H2pwd", "");
 		Connection con = DriverManager.getConnection(connectionString, userName, pwd);
 		return con;
 	}
