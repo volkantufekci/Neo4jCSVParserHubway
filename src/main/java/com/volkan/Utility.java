@@ -4,8 +4,13 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 public class Utility {
+	
+	private static final Logger logger = LoggerFactory.getLogger(Utility.class); 
 
 	public static String buildLogFileName () {
 //		SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMddhhmm");
@@ -27,7 +32,7 @@ public class Utility {
 	 * @return URL of the Neo4j instance distinguished by the param port
 	 */
 	public static String getNeo4jURLFromPropertiesForPort(String port){
-		String defaultValue = Configuration.BASE_URL_OF_NEO4J_INSTANCES + ":" + port + "/";
+		String defaultValue = Configuration.BASE_URL_OF_NEO4J_INSTANCES + ":" + port;
 		String propertyValue = defaultValue;
 		
 		FileInputStream in = null;
@@ -37,6 +42,7 @@ public class Utility {
 			properties.load(in);
 			propertyValue = properties.getProperty(port, defaultValue);
 		} catch (IOException e) {
+			logger.error("conf/interpartitiontraverse.properties could not be read!" );
 			e.printStackTrace();
 		} finally {
 			if (in != null) {
@@ -48,7 +54,7 @@ public class Utility {
 			}
 		}
 		
-		return propertyValue;
+		return propertyValue + "/";
 	}
 
 }
