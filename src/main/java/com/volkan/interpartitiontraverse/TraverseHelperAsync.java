@@ -29,8 +29,7 @@ public class TraverseHelperAsync extends AbstractTraverseHelper {
 		List<String> realResults = new ArrayList<String>();
 		TraversalDescription traversalDes = TraversalDescriptionBuilder.buildFromJsonMap(jsonMap);
 	
-//		Node startNode = db.getNodeById((int) jsonMap.get("start_node"));
-		Node startNode = fetchStartNodeFromIndex(db, jsonMap);
+		Node startNode = getStartNode(db, jsonMap);
 
 		String previousPath = (String) jsonMap.get(JsonKeyConstants.PATH);
 		int toDepth 		= (Integer) jsonMap.get(JsonKeyConstants.DEPTH);
@@ -49,6 +48,27 @@ public class TraverseHelperAsync extends AbstractTraverseHelper {
 
 		updateDBWithResults(jsonMap, realResults);
 		return realResults;
+	}
+
+	/**
+	 * Returns the start node according to nodeFetchStyle property of the 
+	 * interpartitiontraverse.properties file. If no key with the name nodeFetchStyle is found
+	 * then returns "BY_INDEX" as default value.
+	 * @author volkan
+	 * @param db
+	 * @param jsonMap
+	 * @return
+	 */
+	private Node getStartNode(GraphDatabaseService db, Map<String, Object> jsonMap) {
+		Node startNode;
+		String defaultValue = "BY_INDEX";
+		String nodeFetchStyle = Utility.getValueOfProperty("nodeFetchStyle", defaultValue);
+		if (nodeFetchStyle.equalsIgnoreCase("BY_ID")) {
+			startNode = db.getNodeById((int) jsonMap.get("start_node"));
+		} else {
+			startNode = fetchStartNodeFromIndex(db, jsonMap);
+		}
+		return startNode;
 	}
 
 	private void updateDBWithResults(Map<String, Object> jsonMap, List<String> realResults) {
