@@ -22,8 +22,8 @@ public class Neo4jClientAsync {
 //			
 //			@Override
 //			public void run() {
-				RestConnector restConnector = new RestConnector(port);
-				logger.info(restConnector.delegateQueryWithoutResult(jsonMap));
+		RestConnector restConnector = new RestConnector(port);
+		logger.info(restConnector.delegateQueryWithoutResult(jsonMap));
 //			}
 //		});
 //		t.start();

@@ -55,18 +55,16 @@ public class Main {
 				String url	= "http://localhost";
 				delegateQueryToAnotherNeo4j(url, port, JsonHelper.readJsonFileIntoMap("testhop.json"));
 				break;
-			case 9:
-				new H2Client().generateJob(JsonHelper.readJsonFileIntoMap("testhop.json"));
-				break;
 			case 10:
 				new H2Client().updateJobWithCypherResult(1l);
 				break;
 			case 11:
 				H2Client h2Client = new H2Client();
 				h2Client.deleteAll();
-				long jobID = h2Client.generateJob(JsonHelper.readJsonFileIntoMap("testhopAsync.json"));
+				String jsonFileName = "src/main/resources/jsons/erdos111111.json";
+				long jobID = h2Client.generateJob(JsonHelper.readJsonFileIntoMap(jsonFileName));
 
-				Map<String, Object> jsonMap = JsonHelper.readJsonFileIntoMap("testhopAsync.json");
+				Map<String, Object> jsonMap = JsonHelper.readJsonFileIntoMap(jsonFileName);
 				jsonMap.put(JsonKeyConstants.JOB_ID, jobID);
 				jsonMap.put(JsonKeyConstants.PARENT_JOB_ID, jobID);
 

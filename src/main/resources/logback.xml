@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<configuration>
+
+	<statusListener class="ch.qos.logback.core.status.OnConsoleStatusListener" />
+
+	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+		<layout class="ch.qos.logback.classic.PatternLayout">
+			<pattern>
+<!-- 				%d{HH:mm:ss.SSS} [%thread] %-5level %logger{32} - %msg%n -->
+				%d{HH:mm:ss.SSS} - %msg%n
+			</pattern>
+		</layout>
+	</appender>
+
+	<appender name="FILE"
+		class="ch.qos.logback.core.FileAppender">
+		<File>./src/main/resources/log/logFile.log</File>
+		<layout class="ch.qos.logback.classic.PatternLayout">
+			<Pattern>
+				%d{HH:mm:ss,SSS} - %msg%n
+			</Pattern>
+		</layout>
+	</appender>
+
+<!-- 	<appender name="ROLLINGFILE"
+		class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<File>./log/logFile.log</File>
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<FileNamePattern>
+				logFile.%d{yyyy-MM-dd_HH-mm}.log
+			</FileNamePattern>
+		</rollingPolicy>
+
+		<layout class="ch.qos.logback.classic.PatternLayout">
+			<Pattern>
+				%d{HH:mm:ss,SSS} - %msg%n
+			</Pattern>
+		</layout>
+	</appender> -->
+
+	<root>
+		<level value="INFO" />
+		<appender-ref ref="STDOUT" />
+		<appender-ref ref="FILE" />
+	</root>
+
+	<!--<include file="/tmp/logback-demo.xml"/> -->
+
+</configuration>
