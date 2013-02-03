@@ -30,14 +30,14 @@ public class Neo4jClientAsync {
 		
 	}
 	
-	public void periodicFetcher(long parentID) throws ClassNotFoundException, SQLException, InterruptedException {
-		long start = System.currentTimeMillis();
-		
-		H2Helper h2Helper = new H2Helper();
-		boolean atLeast1ResultFetched = false;
-		while(true) {
+    public void periodicFetcher(long parentID) throws ClassNotFoundException, SQLException, InterruptedException {
+        long start = System.currentTimeMillis();
+
+        H2Helper h2Helper = new H2Helper();
+        boolean atLeast1ResultFetched = true;
+		while (true) {
 			Thread.sleep(500);
-			
+
 			List<VJobEntity> list = h2Helper.fetchJobNotDeletedWithParentID(parentID);
 			if (list.isEmpty() && atLeast1ResultFetched) {
 				break;
@@ -45,15 +45,17 @@ public class Neo4jClientAsync {
 				List<Long> jobIDs = new ArrayList<Long>();
 				for (VJobEntity vJobEntity : list) {
 					logger.info(vJobEntity.getVresult());
-					jobIDs.add(vJobEntity.getId());
+					if (vJobEntity.getVresult() != null)
+						jobIDs.add(vJobEntity.getId());
 				}
-				h2Helper.updateJobsMarkAsDeleted(jobIDs);
-				atLeast1ResultFetched = true;
+				if (!jobIDs.isEmpty())
+					h2Helper.updateJobsMarkAsDeleted(jobIDs);
+				// atLeast1ResultFetched = true;
 			}
 		}
-		h2Helper.closeConnection();
+        h2Helper.closeConnection();
 
-		long end = System.currentTimeMillis();
-		logger.info(end - start + " miliseconds passed in periodicFetcher" );
-	}
+        long end = System.currentTimeMillis();
+        logger.info(end - start + " miliseconds passed in periodicFetcher" );
+    }
 }

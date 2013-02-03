@@ -154,8 +154,7 @@ public class H2Helper {
 		
 		List<VJobEntity> results = new ArrayList<VJobEntity>();
 		
-		String sql = "SELECT * FROM " + table + 
-					 " WHERE PARENT_ID = ? AND IS_DELETED = FALSE AND VRESULT IS NOT NULL";
+		String sql = "SELECT * FROM " + table + " WHERE PARENT_ID = ? AND IS_DELETED = FALSE";
 		PreparedStatement preparedStatement = con.prepareStatement(sql);
 		preparedStatement.setLong(1, parentID);
 		ResultSet rs = preparedStatement.executeQuery();
