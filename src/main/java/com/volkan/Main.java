@@ -1,10 +1,13 @@
 package com.volkan;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.DynamicRelationshipType;
@@ -16,6 +19,8 @@ import org.neo4j.kernel.Traversal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.volkan.db.H2Helper;
+import com.volkan.db.VJobEntity;
 import com.volkan.interpartitiontraverse.JsonHelper;
 import com.volkan.interpartitiontraverse.JsonKeyConstants;
 import com.volkan.interpartitiontraverse.RestConnector;
@@ -35,7 +40,7 @@ public class Main {
 //		ExecutionEngine engine = new ExecutionEngine(db);
 		
 		long start = System.currentTimeMillis();
-		int hede = 11;
+		int hede = 13;
 		try {
 			switch (hede) {
 			case 0:
@@ -62,19 +67,73 @@ public class Main {
 				H2Client h2Client = new H2Client();
 				h2Client.deleteAll();
 				String jsonFileName = "src/main/resources/jsons/erdos111111.json";
-				long jobID = h2Client.generateJob(JsonHelper.readJsonFileIntoMap(jsonFileName));
-
-				Map<String, Object> jsonMap = JsonHelper.readJsonFileIntoMap(jsonFileName);
-				jsonMap.put(JsonKeyConstants.JOB_ID, jobID);
-				jsonMap.put(JsonKeyConstants.PARENT_JOB_ID, jobID);
+				Map<String, Object> jsonMap = generateJobFromJsonFileName(h2Client, jsonFileName);
 
 				Neo4jClientAsync neo4jClientAsync = new Neo4jClientAsync();
-				neo4jClientAsync.delegateQueryAsync("8474", jsonMap);
+				neo4jClientAsync.delegateQueryAsync("6474", jsonMap);
 				neo4jClientAsync.periodicFetcher((long) jsonMap.get(JsonKeyConstants.PARENT_JOB_ID));
 
 				break;
 			case 12:
-				new H2Client().readClob(32);
+				List<VJobEntity> list = new H2Helper().fetchJobNotDeletedWithParentID(37l);
+				List<Long> jobIDs = new ArrayList<>();
+				for (VJobEntity vJobEntity : list) {
+					System.out.println(vJobEntity.getId());
+					jobIDs.add(vJobEntity.getId());
+				}
+				new H2Helper().updateJobsMarkAsDeleted(jobIDs);
+				break;
+			case 13:
+				ExecutorService executorService = Executors.newFixedThreadPool(2);
+				executorService.execute(new Runnable() {
+					
+					@Override
+					public void run() {
+						try {
+							H2Client h2Client = new H2Client();
+							h2Client.deleteAll();
+							String jsonFileName = "src/main/resources/jsons/erdos6474_6.json";
+							Map<String, Object> jsonMap = generateJobFromJsonFileName(h2Client, jsonFileName);
+
+							Neo4jClientAsync neo4jClientAsync = new Neo4jClientAsync();
+							neo4jClientAsync.delegateQueryAsync("6474", jsonMap);
+							neo4jClientAsync.periodicFetcher((long) jsonMap.get(JsonKeyConstants.PARENT_JOB_ID));
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+						
+					}
+				});
+				
+				System.out.println("6474 cagrildi");
+				
+				executorService.execute(new Runnable() {
+					
+					@Override
+					public void run() {
+						try {
+							H2Client h2Client = new H2Client();
+							h2Client.deleteAll();
+							String jsonFileName = "src/main/resources/jsons/erdos6475_1.json";
+							Map<String, Object> jsonMap = generateJobFromJsonFileName(h2Client, jsonFileName);
+
+							Neo4jClientAsync neo4jClientAsync = new Neo4jClientAsync();
+							neo4jClientAsync.delegateQueryAsync("6475", jsonMap);
+							neo4jClientAsync.periodicFetcher((long) jsonMap.get(JsonKeyConstants.PARENT_JOB_ID));
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+						
+					}
+				});
+				
+				System.out.println("6475 cagrildi");
+				
+				executorService.shutdown();
+				while (!executorService.isTerminated()) {
+					
+				}
+				
 				break;
 			default:
 				break;
@@ -85,6 +144,16 @@ public class Main {
 		
 		long end = System.currentTimeMillis();
 		logger.info(end - start + " miliseconds passed");
+	}
+
+
+	private static Map<String, Object> generateJobFromJsonFileName(
+			H2Client h2Client, String jsonFileName) throws Exception {
+		Map<String, Object> jsonMap = JsonHelper.readJsonFileIntoMap(jsonFileName);
+		long jobID = h2Client.generateJob(jsonMap);
+		jsonMap.put(JsonKeyConstants.JOB_ID, jobID);
+		jsonMap.put(JsonKeyConstants.PARENT_JOB_ID, jobID);
+		return jsonMap;
 	}
 
 	
