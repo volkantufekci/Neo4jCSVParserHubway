@@ -18,15 +18,15 @@ public class Neo4jClientAsync {
 	
 	public void delegateQueryAsync(final String port, final Map<String, Object> jsonMap) {
 
-//		Thread t = new Thread(new Runnable() {
-//			
-//			@Override
-//			public void run() {
-		RestConnector restConnector = new RestConnector(port);
-		logger.info("uzaktan:" + restConnector.delegateQueryWithoutResult(jsonMap));
-//			}
-//		});
-//		t.start();
+		Thread t = new Thread(new Runnable() {
+			
+			@Override
+			public void run() {
+				RestConnector restConnector = new RestConnector(port);
+				logger.info("uzaktan:" + restConnector.delegateQueryWithoutResult(jsonMap));
+			}
+		});
+		t.start();
 		
 	}
 	
