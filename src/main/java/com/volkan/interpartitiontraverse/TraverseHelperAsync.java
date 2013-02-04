@@ -149,6 +149,9 @@ public class TraverseHelperAsync extends AbstractTraverseHelper {
 			public void run() {
 				RestConnector restConnector = new RestConnector(port);
 				restConnector.delegateQueryWithoutResult(jsonMapClone);
+				//TODO the result of above query shall be inserted into 
+				//db(updateDBWithResults(jsonMap, realResults)) in order to inform
+				//about an exception occurred for the hops 1 and beyond.
 			}
 		});
 
