@@ -92,7 +92,7 @@ public class Main {
 					public void run() {
 						try {
 							H2Client h2Client = new H2Client();
-							String jsonFileName = "src/main/resources/jsons/erdos6474_6.json";
+							String jsonFileName = "src/main/resources/jsons/erdos6474_6_143.json";
 							Map<String, Object> jsonMap = generateJobFromJsonFileName(h2Client, jsonFileName);
 
 							Neo4jClientAsync neo4jClientAsync = new Neo4jClientAsync();
@@ -113,7 +113,7 @@ public class Main {
 					public void run() {
 						try {
 							H2Client h2Client = new H2Client();
-							String jsonFileName = "src/main/resources/jsons/erdos6475_1.json";
+							String jsonFileName = "src/main/resources/jsons/erdos6475_1_21.json";
 							Map<String, Object> jsonMap = generateJobFromJsonFileName(h2Client, jsonFileName);
 
 							Neo4jClientAsync neo4jClientAsync = new Neo4jClientAsync();
