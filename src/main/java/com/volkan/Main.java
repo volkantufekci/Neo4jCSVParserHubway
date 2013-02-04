@@ -1,6 +1,5 @@
 package com.volkan;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -84,6 +83,8 @@ public class Main {
 				new H2Helper().updateJobsMarkAsDeleted(jobIDs);
 				break;
 			case 13:
+				H2Client h2 = new H2Client();
+				h2.deleteAll();
 				ExecutorService executorService = Executors.newFixedThreadPool(2);
 				executorService.execute(new Runnable() {
 					
@@ -91,7 +92,6 @@ public class Main {
 					public void run() {
 						try {
 							H2Client h2Client = new H2Client();
-							h2Client.deleteAll();
 							String jsonFileName = "src/main/resources/jsons/erdos6474_6.json";
 							Map<String, Object> jsonMap = generateJobFromJsonFileName(h2Client, jsonFileName);
 
@@ -113,7 +113,6 @@ public class Main {
 					public void run() {
 						try {
 							H2Client h2Client = new H2Client();
-							h2Client.deleteAll();
 							String jsonFileName = "src/main/resources/jsons/erdos6475_1.json";
 							Map<String, Object> jsonMap = generateJobFromJsonFileName(h2Client, jsonFileName);
 

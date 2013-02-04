@@ -9,10 +9,16 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.volkan.Neo4jClientAsync;
 import com.volkan.Utility;
 
 public class H2Helper {
 
+	private static final Logger logger = LoggerFactory.getLogger(H2Helper.class);
+	
 	private static String table = " NEORESULTS ";
 	private Connection con;
 
@@ -204,6 +210,7 @@ public class H2Helper {
 		
 		String userName = Utility.getValueOfProperty("H2user", "sa");
 		String pwd 		= Utility.getValueOfProperty("H2pwd", "");
+		logger.info("H2 Connection: {} {} {}", connectionString, userName, pwd);
 		Connection con = DriverManager.getConnection(connectionString, userName, pwd);
 		return con;
 	}
