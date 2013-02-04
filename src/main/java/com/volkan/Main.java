@@ -29,7 +29,8 @@ import com.volkan.interpartitiontraverse.TraverseHelper;
 public class Main {
 
 	private static final Logger logger = LoggerFactory.getLogger(Main.class);
-//	private static final String DB_PATH = "/home/volkan/erdos8474notindexed.201301151430.graph.db";
+//	private static final String DB_PATH = "/home/volkan/Development/tez/nodes_rels_csv_arsivi/erdos8474notindexed.201301151430.graph.db";
+//	private static final String DB_PATH = "/home/volkan/Development/tez/nodes_rels_csv_arsivi/erdos6477graph.db/";
 	private static GraphDatabaseService db;
 	
 	public static void main(String[] args) {
@@ -38,15 +39,15 @@ public class Main {
 //		registerShutdownHook();
 //		ExecutionEngine engine = new ExecutionEngine(db);
 		
-		long start = 0l;
-		int hede = 13;
+		long start = System.currentTimeMillis();
+		int hede = 0;
 		try {
 			switch (hede) {
 			case 0:
 //				Neo4jClient.getNodesWithMostFriendsFromEgullerTwitterDB(engine);
 //				Neo4jClient.myFriendDepth3(db);
 //				ErdosWebGraphImporter.readBigFile();
-//				new Neo4jClient().getMostFollowedErdos(db);
+				new Neo4jClient().getMostFollowedNodes(db, 432911, "follows", Direction.INCOMING);
 				break;
 			case 5:
 				traverseWithShadowEvaluator();
@@ -66,7 +67,7 @@ public class Main {
 				H2Client h2Client = new H2Client();
 				h2Client.deleteAll();
 				String jsonFileName = "src/main/resources/jsons/erdos111111.json";
-				Map<String, Object> jsonMap = generateJobFromJsonFileName(h2Client, jsonFileName);
+				Map<String, Object> jsonMap = generateJobInDBFromJsonFileName(h2Client, jsonFileName);
 
 				Neo4jClientAsync neo4jClientAsync = new Neo4jClientAsync();
 				neo4jClientAsync.delegateQueryAsync("6474", jsonMap);
@@ -95,7 +96,7 @@ public class Main {
 						try {
 							H2Client h2Client = new H2Client();
 							String jsonFileName = "src/main/resources/jsons/erdos6474_6_143.json";
-							Map<String, Object> jsonMap = generateJobFromJsonFileName(h2Client, jsonFileName);
+							Map<String, Object> jsonMap = generateJobInDBFromJsonFileName(h2Client, jsonFileName);
 
 							Neo4jClientAsync neo4jClientAsync = new Neo4jClientAsync();
 							neo4jClientAsync.delegateQueryAsync("6474", jsonMap);
@@ -116,7 +117,7 @@ public class Main {
 						try {
 							H2Client h2Client = new H2Client();
 							String jsonFileName = "src/main/resources/jsons/erdos6475_1_21.json";
-							Map<String, Object> jsonMap = generateJobFromJsonFileName(h2Client, jsonFileName);
+							Map<String, Object> jsonMap = generateJobInDBFromJsonFileName(h2Client, jsonFileName);
 
 							Neo4jClientAsync neo4jClientAsync = new Neo4jClientAsync();
 							neo4jClientAsync.delegateQueryAsync("6475", jsonMap);
@@ -136,6 +137,10 @@ public class Main {
 				}
 				
 				break;
+				
+			case 14:
+				generate10Jobs();
+				break;
 			default:
 				break;
 			}
@@ -147,8 +152,61 @@ public class Main {
 		logger.info(end - start + " miliseconds passed");
 	}
 
+	private static void generate10Jobs() throws Exception {
+		ExecutorService executorService = Executors.newFixedThreadPool(10);
+		H2Client h2Client = new H2Client();
+		
+		h2Client.deleteAll();
+		logger.info("deletedAll and STARTED");
+		
+		executeJobForPortForJsonFileName(
+				"6474", "src/main/resources/jsons/erdos6474_6_143.json", 
+				executorService, h2Client);
+		
+		executeJobForPortForJsonFileName(
+				"6475", "src/main/resources/jsons/erdos6475_1_21.json", 
+				executorService, h2Client);
+		executeJobForPortForJsonFileName(
+				"6476", "src/main/resources/jsons/erdos6476_3_90.json", 
+				executorService, h2Client);
+		executeJobForPortForJsonFileName(
+				"6477", "src/main/resources/jsons/erdos6477_446_27.json", 
+				executorService, h2Client);
+		executeJobForPortForJsonFileName(
+				"6478", "src/main/resources/jsons/erdos6478_138704_2902.json", 
+				executorService, h2Client);
+		executeJobForPortForJsonFileName(
+				"6479", "src/main/resources/jsons/erdos6479_1402_330.json", 
+				executorService, h2Client);		
+		executeJobForPortForJsonFileName(
+				"6480", "src/main/resources/jsons/erdos6480_73_515.json", 
+				executorService, h2Client);
+		executeJobForPortForJsonFileName(
+				"6481", "src/main/resources/jsons/erdos6481_1238_82.json", 
+				executorService, h2Client);
+		executeJobForPortForJsonFileName(
+				"6482", "src/main/resources/jsons/erdos6482_85_1000.json", 
+				executorService, h2Client);
+		executeJobForPortForJsonFileName(
+				"6483", "src/main/resources/jsons/erdos6483_964_43.json", 
+				executorService, h2Client);		
+		
+		executorService.shutdown();
+		while (!executorService.isTerminated()) {
+			
+		}
+	}
 
-	private static Map<String, Object> generateJobFromJsonFileName(
+	private static void executeJobForPortForJsonFileName(
+			String port, String jsonFileName, 
+			ExecutorService executorService, H2Client h2Client) throws Exception {
+		Map<String, Object> jsonMap = generateJobInDBFromJsonFileName(h2Client, jsonFileName);
+		Runnable r					= Neo4jQueryJobFactory.buildJob(port, jsonMap);
+		executorService.execute( r );
+		logger.info("Job submitted to Neo-{}", port);
+	}
+	
+	private static Map<String, Object> generateJobInDBFromJsonFileName(
 			H2Client h2Client, String jsonFileName) throws Exception {
 		Map<String, Object> jsonMap = JsonHelper.readJsonFileIntoMap(jsonFileName);
 		long jobID = h2Client.generateJob(jsonMap);
