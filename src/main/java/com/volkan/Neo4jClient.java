@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.Lists;
 import com.volkan.csv.NodePropertyHolder;
 import com.volkan.csv.StationNodePropertyHolder;
+import com.volkan.interpartitiontraverse.PropertyNameConstants;
 
 public class Neo4jClient {
 
@@ -51,23 +52,35 @@ public class Neo4jClient {
 		}
 	}
 	
-	public void getMostFollowedErdos(GraphDatabaseService db) {
+	/**
+	 * @param db
+	 * @param maxNodeID 1850065 for erdos
+	 * @param relName "follows" for erdos
+	 * @param direction Direction.INCOMING for erdos
+	 */
+	public void getMostFollowedNodes(GraphDatabaseService db, int maxNodeID, 
+										String relName, Direction direction) {
 		List<FollowerCountHolder> list = new ArrayList<FollowerCountHolder>(10);
-		for (int i = 0; i < 10; i++) {
+		int limit = 10;
+		for (int i = 0; i < limit; i++) {
 			FollowerCountHolder fch = new FollowerCountHolder(i, 0);
 			list.add(fch);
 		}
 		
 		int smallestCount = 0;
 		
-		for (int nodeID = 1; nodeID <= 1850065; nodeID++) {
+		for (int nodeID = 1; nodeID <= maxNodeID; nodeID++) {
 			Node startNode = db.getNodeById(nodeID);
+			if ( (boolean) startNode.getProperty(PropertyNameConstants.SHADOW, false)) {
+				continue;
+			}
 			TraversalDescription td = Traversal.description();
 			td = td.depthFirst()
-					.relationships(DynamicRelationshipType.withName("follows"), Direction.INCOMING)
+					.relationships(DynamicRelationshipType.withName(relName), direction)
 					.evaluator(Evaluators.atDepth(1));
 			int followerCount = 0;
 			for (Path path : td.traverse(startNode)) {
+				logger.debug("{}",path.toString());
 				followerCount++;
 			}
 			
@@ -97,6 +110,12 @@ public class Neo4jClient {
 							followerCountHolder.nodeID, followerCountHolder.followerCount);
 		}
 	}
+
+	public void getMostFollowedErdos(GraphDatabaseService db, int maxNodeID, 
+			String relName, Direction direction) {
+		getMostFollowedNodes(db, maxNodeID, relName, direction);
+	}
+
 	
 	public static void myFriendDepth3(GraphDatabaseService db) {
 		Node startNode = db.getNodeById(1);
@@ -108,7 +127,7 @@ public class Neo4jClient {
 //		Set<Long> set = new HashSet<Long>();
 		for (Path path : td.traverse(startNode)) {
 //			logger.info(node.toString());
-//			logger.info(path.toString());
+			logger.info("{}",path.toString());
 			count++;
 //			set.add(node.getId());
 		}
