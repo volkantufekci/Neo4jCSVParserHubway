@@ -38,7 +38,7 @@ public class Main {
 //		registerShutdownHook();
 //		ExecutionEngine engine = new ExecutionEngine(db);
 		
-		long start = System.currentTimeMillis();
+		long start = 0l;
 		int hede = 13;
 		try {
 			switch (hede) {
@@ -85,6 +85,8 @@ public class Main {
 			case 13:
 				H2Client h2 = new H2Client();
 				h2.deleteAll();
+				logger.info("STARTED");
+				start = System.currentTimeMillis();
 				ExecutorService executorService = Executors.newFixedThreadPool(2);
 				executorService.execute(new Runnable() {
 					

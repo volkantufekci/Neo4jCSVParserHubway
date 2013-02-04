@@ -44,9 +44,10 @@ public class Neo4jClientAsync {
 			} else {
 				List<Long> jobIDs = new ArrayList<Long>();
 				for (VJobEntity vJobEntity : list) {
-					logger.info(vJobEntity.getVresult());
-					if (vJobEntity.getVresult() != null)
+					if (vJobEntity.getVresult() != null){
+						logger.info(vJobEntity.getVresult());
 						jobIDs.add(vJobEntity.getId());
+					}	
 				}
 				if (!jobIDs.isEmpty())
 					h2Helper.updateJobsMarkAsDeleted(jobIDs);
