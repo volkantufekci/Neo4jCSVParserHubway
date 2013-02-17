@@ -20,6 +20,8 @@ public class Configuration {
 	public static final String RELS_CSV = System.getProperty("user.home") 
 			+ "/rels.csv";
 	
+	public static final String RELS_TXT_VOSVIEWER = "relsVOS.txt";
+	
 	public static final int MAX_NODE_COUNT = 553000;
 	
 	public static final String BASE_URL_OF_NEO4J_INSTANCES = "http://localhost";
