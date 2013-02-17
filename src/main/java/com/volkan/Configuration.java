@@ -21,6 +21,7 @@ public class Configuration {
 			+ "/rels.csv";
 	
 	public static final String RELS_TXT_VOSVIEWER = "relsVOS.txt";
+	public static final String NET_FILE_PAJEK = "erdos.net";
 	
 	public static final int MAX_NODE_COUNT = 553000;
 	

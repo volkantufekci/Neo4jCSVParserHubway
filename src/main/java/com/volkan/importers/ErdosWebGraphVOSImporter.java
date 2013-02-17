@@ -15,7 +15,7 @@ public class ErdosWebGraphVOSImporter {
 
 	public static void main(String[] args) {
 		try {
-			ErdosWebGraphVOSImporter.readBigFile();
+			ErdosWebGraphVOSImporter.buildNETFileForPajek();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -50,6 +50,41 @@ public class ErdosWebGraphVOSImporter {
 			}
 			
 			relFile.write(map.get(first) + "," + map.get(second) + ",1\n");
+
+		}
+		System.out.println(map.size());
+		if (reader != null)
+			reader.close();
+		if (relFile != null)
+			relFile.close();
+	}
+	
+	public static void buildNETFileForPajek() throws IOException {
+		Charset charset = Charset.forName("US-ASCII");
+
+		BufferedWriter relFile = 
+				new BufferedWriter(new FileWriter(Configuration.NET_FILE_PAJEK));
+		relFile.write("*Vertices 1850065\n");
+		relFile.write("*Arcslist\n");
+
+		BufferedReader reader = Files.newBufferedReader(Configuration.ERDOS_TSV, charset);
+		Map<String, Integer> map = new HashMap<>();
+		Integer index = 1;
+		String line = null;
+		while ((line = reader.readLine()) != null) {
+			String[] splitted = line.split("\t");
+			String first = splitted[1];
+			String second = splitted[0];
+
+			if (!map.containsKey(first)) {
+				map.put(first, index++);
+			}
+
+			if (!map.containsKey(second)) {
+				map.put(second, index++);
+			}
+			
+			relFile.write(map.get(first) + " " + map.get(second) + " 1\n");
 
 		}
 		System.out.println(map.size());
