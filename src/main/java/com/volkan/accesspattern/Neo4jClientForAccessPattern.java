@@ -50,7 +50,7 @@ public class Neo4jClientForAccessPattern {
 	}
 
 	private void writeNodeIDGidMapForRuby() throws IOException {
-		BufferedWriter gpartInputFile = new BufferedWriter(new FileWriter("gpartInputFile"));
+		BufferedWriter gpartInputFile = new BufferedWriter(new FileWriter("nodeIDGidMapForRuby"));
 		
 		StringBuilder sb = new StringBuilder();
 		for (Long nodeID : nodeIDGidMap.keySet()) {
