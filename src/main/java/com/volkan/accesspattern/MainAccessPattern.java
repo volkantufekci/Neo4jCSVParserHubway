@@ -31,7 +31,7 @@ import com.volkan.Configuration;
 
 public class MainAccessPattern {
 
-	private static final int RANDOM_ACCESS_COUNT = 5;
+	private static final int RANDOM_ACCESS_COUNT = 10;
 	private static final int MAX_NODE_COUNT 	 = 1850065;
 	private static final int PARTITION_COUNT 	 = 10;
 	private static final int LAST_PARTITION		 = 6483;
@@ -59,6 +59,7 @@ public class MainAccessPattern {
 	
 	
 	public static void main(String[] args) throws IOException, InterruptedException {
+		Runtime.getRuntime().exec("rm -rf "+Configuration.DB_AP_PATH);
 		db = new GraphDatabaseFactory().newEmbeddedDatabase(DB_PATH);
 		dbAP = new GraphDatabaseFactory().newEmbeddedDatabase(Configuration.DB_AP_PATH);
 		registerShutdownHook();
@@ -74,6 +75,8 @@ public class MainAccessPattern {
 
 	private static void createRandomAccessPatterns() throws IOException {
 		List<Integer> randomIDs = createRandomIDs();
+//		List<Integer> randomIDs = Arrays.asList(1527971,1824940);
+		
 		writeRandomIDs(randomIDs);
 		
 		TraversalDescription traversalDescription = createTraversalDesc();
