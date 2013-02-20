@@ -42,10 +42,15 @@ public class Neo4jClientForAccessPattern {
 		return nodeIDNeiIDArrayMap;
 	}
 
-	private void putToNodeIDGidMap(long i, Node node) {
+	/** Looks for nodes with gid property because other nodes are created in order to reference
+	 * paths which do not exist in the original db. So this method skips path holding ref nodes.
+	 * @param nodeID
+	 * @param node
+	 */
+	private void putToNodeIDGidMap(long nodeID, Node node) {
 		Object nullOrGid = node.getProperty("gid", null);
 		if (nullOrGid != null) {
-			nodeIDGidMap.put(i, new Long(((Integer) nullOrGid).longValue()));
+			nodeIDGidMap.put(nodeID, new Long(nullOrGid.toString()));
 		}
 	}
 

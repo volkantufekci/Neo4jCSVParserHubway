@@ -31,6 +31,12 @@ import com.volkan.Configuration;
 
 public class MainAccessPattern {
 
+	private static final int RANDOM_ACCESS_COUNT = 5;
+	private static final int MAX_NODE_COUNT 	 = 1850065;
+	private static final int PARTITION_COUNT 	 = 10;
+	private static final int LAST_PARTITION		 = 6483;
+	private static int maxNodeCountInDBAP 		 = 0;
+
 	private static final String DB_PATH = System.getProperty("user.home") +  
 			"/Development/tez/Neo4jSurumleri/neo4j-community-1.8.M07erdos/data/graph.db/";
 	
@@ -43,7 +49,7 @@ public class MainAccessPattern {
 	
 	private static final String nodeKeyName = "gid";
 	private static final String normalNodeIndexName = "nodes";
-	
+
 	private static Index<Node> allRefIndex;
 	private static Index<Node> refNodeIndex;
 	private static Index<Node> allNormalNodeIndex;
@@ -52,7 +58,7 @@ public class MainAccessPattern {
 	private static Set<String> cache = new HashSet<>();
 	
 	
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) throws IOException, InterruptedException {
 		db = new GraphDatabaseFactory().newEmbeddedDatabase(DB_PATH);
 		dbAP = new GraphDatabaseFactory().newEmbeddedDatabase(Configuration.DB_AP_PATH);
 		registerShutdownHook();
@@ -62,6 +68,11 @@ public class MainAccessPattern {
 		allNormalNodeIndex = dbAP.index().forNodes( allNormalNodeIndexName );
 		normalNodeIndex = dbAP.index().forNodes( normalNodeIndexName );
 				
+		createRandomAccessPatterns();
+		operateGparting();
+	}
+
+	private static void createRandomAccessPatterns() throws IOException {
 		List<Integer> randomIDs = createRandomIDs();
 		writeRandomIDs(randomIDs);
 		
@@ -78,7 +89,6 @@ public class MainAccessPattern {
 				cache.add(hashCode);
 				Transaction tx = dbAP.beginTx();
 				try {
-//					Node refNode = getOrCreateUserWithUniqueFactory(hashCode, dbAP, refIndexName, refKeyName);
 					Node refNode = refNodeIndex.get(refKeyName, hashCode).getSingle();
 					if (refNode == null) {
 						refNode = createRefNodeAndAddToIndex(hashCode, randomID);
@@ -97,6 +107,29 @@ public class MainAccessPattern {
 		}
 	}
 
+	private static SortedSet<Long> putNodeIDsInPathIntoSet(
+			TraversalDescription traversalDescription, Node startNode) {
+		SortedSet<Long> set = new TreeSet<>(); 
+		for (Path path : traversalDescription.traverse(startNode)) {
+			for (Node node : path.nodes()) {
+				set.add(node.getId());
+			}
+		}
+		return set;
+	}
+	
+	private static Node createRefNodeAndAddToIndex(String hashCode, int randomID) {
+		maxNodeCountInDBAP++;
+		Node refNode;
+		refNode = dbAP.createNode();
+		refNode.setProperty(refKeyName, hashCode);
+		refNode.setProperty("randomID", randomID);
+		
+		refNodeIndex.add(refNode, refKeyName, hashCode);
+		allRefIndex.add(refNode, allRefIndexName, allRefIndexName);
+		return refNode;
+	}
+	
 	private static void createNodesInPathIfNeededAndConnectToRefNode(
 			SortedSet<Long> set, Node refNode) 
 	{
@@ -109,20 +142,9 @@ public class MainAccessPattern {
 			refNode.createRelationshipTo(node, RelTypes.follows);
 		}
 	}
-	
-	private static Node createRefNodeAndAddToIndex(String hashCode, int randomID) {
-		Node refNode;
-		refNode = dbAP.createNode();
-		refNode.setProperty(refKeyName, hashCode);
-		refNode.setProperty("randomID", randomID);
-		
-		refNodeIndex.add(refNode, refKeyName, hashCode);
-		allRefIndex.add(refNode, allRefIndexName, allRefIndexName);
-		return refNode;
-	}
-	
 
 	private static Node createNormalNodeAndAddToIndex(String propertyValue) {
+		maxNodeCountInDBAP++;
 		Node node;
 		node = dbAP.createNode();
 		node.setProperty(nodeKeyName, propertyValue);
@@ -142,17 +164,6 @@ public class MainAccessPattern {
 		return hashCode;
 	}
 
-	private static SortedSet<Long> putNodeIDsInPathIntoSet(
-			TraversalDescription traversalDescription, Node startNode) {
-		SortedSet<Long> set = new TreeSet<>(); 
-		for (Path path : traversalDescription.traverse(startNode)) {
-			for (Node node : path.nodes()) {
-				set.add(node.getId());
-			}
-		}
-		return set;
-	}
-
 	private static TraversalDescription createTraversalDesc() {
 		TraversalDescription traversalDescription = 
 				Traversal.description().evaluator(Evaluators.atDepth(2))
@@ -165,8 +176,8 @@ public class MainAccessPattern {
 		Random random = new Random();
 		//1850065ten kucuk 100K random sayi uret
 		List<Integer> randomIDs = new ArrayList<Integer>(100);
-		for (int i = 0; i < 100000; i++) {
-			int randomID = random.nextInt(1850065) + 1;
+		for (int i = 0; i < RANDOM_ACCESS_COUNT; i++) {
+			int randomID = random.nextInt(MAX_NODE_COUNT) + 1;
 			randomIDs.add(randomID);
 		}
 		return randomIDs;
@@ -216,5 +227,16 @@ public class MainAccessPattern {
 	private static enum RelTypes implements RelationshipType
 	{
 	    follows
+	}
+	
+	private static void operateGparting() throws IOException, InterruptedException {
+		Neo4jClientForAccessPattern neo4jClient = new Neo4jClientForAccessPattern();
+		Map<Long, List<Long>> nodeIDNeiIDArrayMap = 
+								neo4jClient.collectNodeIDNeiIDsMap(dbAP, maxNodeCountInDBAP);
+		
+		GPartPartitioner.buildGrfFile(nodeIDNeiIDArrayMap);
+		GPartPartitioner.performGpartingAndWriteGidPartitionMap(
+				PARTITION_COUNT, neo4jClient.getNodeIDGidMap(), LAST_PARTITION, MAX_NODE_COUNT);
+		
 	}
 }

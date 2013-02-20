@@ -12,19 +12,19 @@ import org.junit.Test;
 
 public class GPartPartitionerTest {
 
-	private Map<Integer, List<Integer>> nodeIDNeiIDArrayMap;
+	private Map<Long, List<Long>> nodeIDNeiIDArrayMap;
 	
 	@Before
 	public void setUp() throws Exception {
-		nodeIDNeiIDArrayMap = new HashMap<Integer, List<Integer>>();
-		nodeIDNeiIDArrayMap.put(1, Arrays.asList(6));
-		nodeIDNeiIDArrayMap.put(2, Arrays.asList(6,7));
-		nodeIDNeiIDArrayMap.put(3, Arrays.asList(6,7,8));
-		nodeIDNeiIDArrayMap.put(4, Arrays.asList(6,7,8));
-		nodeIDNeiIDArrayMap.put(5, Arrays.asList(8));
-		nodeIDNeiIDArrayMap.put(6, Arrays.asList(1,2,3,4));
-		nodeIDNeiIDArrayMap.put(7, Arrays.asList(2,3,4,4));
-		nodeIDNeiIDArrayMap.put(8, Arrays.asList(4,5,3));
+		nodeIDNeiIDArrayMap = new HashMap<Long, List<Long>>();
+		nodeIDNeiIDArrayMap.put(1l, Arrays.asList(6l));
+		nodeIDNeiIDArrayMap.put(2l, Arrays.asList(6l,7l));
+		nodeIDNeiIDArrayMap.put(3l, Arrays.asList(6l,7l,8l));
+		nodeIDNeiIDArrayMap.put(4l, Arrays.asList(6l,7l,8l));
+		nodeIDNeiIDArrayMap.put(5l, Arrays.asList(8l));
+		nodeIDNeiIDArrayMap.put(6l, Arrays.asList(1l,2l,3l,4l));
+		nodeIDNeiIDArrayMap.put(7l, Arrays.asList(2l,3l,4l,4l));
+		nodeIDNeiIDArrayMap.put(8l, Arrays.asList(4l,5l,3l));
 		
 	}
 

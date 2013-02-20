@@ -60,8 +60,8 @@ public class Neo4jClientForAccessPatternTest {
         try
         {
             Node refNode	= createRefNode(db, 555, 555);
-            Node node1 		= createNormalNode(db, 11);
-            Node node2 		= createNormalNode(db, 33);
+            Node node1 		= createNormalNode(db, "11");
+            Node node2 		= createNormalNode(db, "33");
             refNode.createRelationshipTo(node1, follows);
             refNode.createRelationshipTo(node2, follows);
 
@@ -81,12 +81,11 @@ public class Neo4jClientForAccessPatternTest {
 //        people.add(node, "name", name);
         return node;
     }
-    
-    private Node createNormalNode(GraphDatabaseService db, int gid) {
-//      Index<Node> people = db.index().forNodes("people");
+
+    //TODO Maalesef db'den gid'ler String olarak geliyor, duzeltilmeli
+    private Node createNormalNode(GraphDatabaseService db, String gid) {
       Node node = db.createNode();
       node.setProperty("gid", gid);
-//      people.add(node, "name", name);
       return node;
   }
 
