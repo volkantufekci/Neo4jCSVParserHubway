@@ -30,5 +30,12 @@ public class Configuration {
 	public static final String BASE_URL_OF_NEO4J_INSTANCES = "http://localhost";
 	
 	public static final String DB_AP_PATH = System.getProperty("user.home") +  
-			"/Development/tez/nodes_rels_csv_arsivi/dbAccessPattern.graph.db/";
+			"/dbAccessPattern.graph.db/";
+
+	public static final String GPART_RESULT_PATH = System.getProperty("user.home") + 
+			"/result.map";
+	public static final String GPART_GRF_PATH = System.getProperty("user.home") + 
+			"/gpartInputFile.grf";
+	public static final String GID_PARTITION_MAP = System.getProperty("user.home") + 
+			"/gid_partition_h";
 }
