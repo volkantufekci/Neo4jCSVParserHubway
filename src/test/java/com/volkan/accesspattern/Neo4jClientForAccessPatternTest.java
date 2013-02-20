@@ -2,6 +2,7 @@ package com.volkan.accesspattern;
 
 import static org.junit.Assert.assertEquals;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -31,7 +32,7 @@ public class Neo4jClientForAccessPatternTest {
 	}
 
 	@Test
-	public final void testCollectNodeIDNeiIDsMap() {
+	public final void testCollectNodeIDNeiIDsMap() throws IOException {
 		Map<Long, List<Long>> actual = neo4jClient.collectNodeIDNeiIDsMap(db, 3);
 		
 		Map<Long, List<Long>> expected = new HashMap<Long, List<Long>>();
@@ -43,7 +44,7 @@ public class Neo4jClientForAccessPatternTest {
 	}
 	
 	@Test
-	public final void testPutToNodeIDGidMap() {
+	public final void testPutToNodeIDGidMap() throws IOException {
 		Map<Long, Long> expected = new HashMap<>();
 		expected.put(2l, 11l);
 		expected.put(3l, 33l);
