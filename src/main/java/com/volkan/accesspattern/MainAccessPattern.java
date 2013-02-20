@@ -39,7 +39,7 @@ public class MainAccessPattern {
 
 	private static final String DB_PATH = System.getProperty("user.home") +  
 			"/Development/tez/Neo4jSurumleri/neo4j-community-1.8.M07erdos/data/graph.db/";
-	
+//			"/erdos8474notindexed.201301151430.graph.db/";
 	private static GraphDatabaseService db, dbAP;
 	private static final String refKeyName = "hashCode";
 	private static final String refIndexName = "refNodes";
