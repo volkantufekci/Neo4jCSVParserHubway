@@ -26,8 +26,9 @@ public class GPartPartitioner {
 		StringBuilder sb = new StringBuilder();
 		int nodeCount = 0;
 		int relCount  = 0;
-		
-		for (Long nodeID : nodeIDNeiIDArrayMap.keySet()) {
+		TreeSet<Long> sortedNodeIDs = new TreeSet<>();
+		sortedNodeIDs.addAll(nodeIDNeiIDArrayMap.keySet());
+		for (Long nodeID : sortedNodeIDs) {
 			SortedSet<Long> sortedNeis = new TreeSet<>();
 			sortedNeis.addAll(nodeIDNeiIDArrayMap.get(nodeID));
 			
