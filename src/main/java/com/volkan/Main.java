@@ -159,37 +159,69 @@ public class Main {
 		h2Client.deleteAll();
 		logger.info("deletedAll and STARTED");
 		
-		executeJobForPortForJsonFileName(
-				"6474", "src/main/resources/jsons/erdos6474_6_143.json", 
-				executorService, h2Client);
+		String jsonFileName = Utility.getValueOfProperty("jsonFileName", "-1");
+		switch (jsonFileName) {
+		case "6474":
+			executeJobForPortForJsonFileName(
+					"6474", "src/main/resources/jsons/erdos6474_6_143.json", 
+					executorService, h2Client);
+			break;
+		case "6475":
+			executeJobForPortForJsonFileName(
+					"6475", "src/main/resources/jsons/erdos6475_1_21.json", 
+					executorService, h2Client);
+			break;
+		case "6476":
+			executeJobForPortForJsonFileName(
+					"6476", "src/main/resources/jsons/erdos6476_3_90.json", 
+					executorService, h2Client);
+			break;
+		case "6477":
+			executeJobForPortForJsonFileName(
+					"6477", "src/main/resources/jsons/erdos6477_446_27.json", 
+					executorService, h2Client);
+			break;
+		case "6482":
+			executeJobForPortForJsonFileName(
+					"6482", "src/main/resources/jsons/erdos6482_85_1000.json", 
+					executorService, h2Client);
+			break;	
 		
-		executeJobForPortForJsonFileName(
-				"6475", "src/main/resources/jsons/erdos6475_1_21.json", 
-				executorService, h2Client);
-		executeJobForPortForJsonFileName(
-				"6476", "src/main/resources/jsons/erdos6476_3_90.json", 
-				executorService, h2Client);
-		executeJobForPortForJsonFileName(
-				"6477", "src/main/resources/jsons/erdos6477_446_27.json", 
-				executorService, h2Client);
-		executeJobForPortForJsonFileName(
-				"6478", "src/main/resources/jsons/erdos6478_138704_2902.json", 
-				executorService, h2Client);
-		executeJobForPortForJsonFileName(
-				"6479", "src/main/resources/jsons/erdos6479_1402_330.json", 
-				executorService, h2Client);		
-		executeJobForPortForJsonFileName(
-				"6480", "src/main/resources/jsons/erdos6480_73_515.json", 
-				executorService, h2Client);
-		executeJobForPortForJsonFileName(
-				"6481", "src/main/resources/jsons/erdos6481_1238_82.json", 
-				executorService, h2Client);
-		executeJobForPortForJsonFileName(
-				"6482", "src/main/resources/jsons/erdos6482_85_1000.json", 
-				executorService, h2Client);
-		executeJobForPortForJsonFileName(
-				"6483", "src/main/resources/jsons/erdos6483_964_43.json", 
-				executorService, h2Client);		
+		case "0"://Run ALL
+			
+		default:
+			executeJobForPortForJsonFileName(
+					"6474", "src/main/resources/jsons/erdos6474_6_143.json", 
+					executorService, h2Client);
+			executeJobForPortForJsonFileName(
+					"6475", "src/main/resources/jsons/erdos6475_1_21.json", 
+					executorService, h2Client);
+			executeJobForPortForJsonFileName(
+					"6476", "src/main/resources/jsons/erdos6476_3_90.json", 
+					executorService, h2Client);
+			executeJobForPortForJsonFileName(
+					"6477", "src/main/resources/jsons/erdos6477_446_27.json", 
+					executorService, h2Client);
+			executeJobForPortForJsonFileName(
+					"6478", "src/main/resources/jsons/erdos6478_138704_2902.json", 
+					executorService, h2Client);
+			executeJobForPortForJsonFileName(
+					"6479", "src/main/resources/jsons/erdos6479_1402_330.json", 
+					executorService, h2Client);		
+			executeJobForPortForJsonFileName(
+					"6480", "src/main/resources/jsons/erdos6480_73_515.json", 
+					executorService, h2Client);
+			executeJobForPortForJsonFileName(
+					"6481", "src/main/resources/jsons/erdos6481_1238_82.json", 
+					executorService, h2Client);
+			executeJobForPortForJsonFileName(
+					"6482", "src/main/resources/jsons/erdos6482_85_1000.json", 
+					executorService, h2Client);
+			executeJobForPortForJsonFileName(
+					"6483", "src/main/resources/jsons/erdos6483_964_43.json", 
+					executorService, h2Client);
+			break;
+		}
 		
 		executorService.shutdown();
 		while (!executorService.isTerminated()) {
