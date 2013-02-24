@@ -1,1 +1,1 @@
-{"start_node":1336370,"client":"NEO4J","relationships":[{"direction":"OUT","type":"follows"},{"direction":"OUT","type":"follows"}],"depth":2,"job_id":1, "parent_job_id":1, "path":""}
+{"start_port":6482,"start_node":1336370,"client":"NEO4J","relationships":[{"direction":"OUT","type":"follows"},{"direction":"OUT","type":"follows"}],"depth":2,"job_id":1, "parent_job_id":1, "path":""}
