@@ -35,3 +35,9 @@ local.properties
 target/
 src/main/resources/log/
 *.log
+
+erdos.net
+nodeIDGidMapForRuby
+randomIDs
+relsVOS.txt
+relsVOSUfak.txt
