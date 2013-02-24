@@ -2,11 +2,15 @@ package com.volkan;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.DynamicRelationshipType;
@@ -20,6 +24,7 @@ import org.slf4j.LoggerFactory;
 
 import com.volkan.db.H2Helper;
 import com.volkan.db.VJobEntity;
+import com.volkan.helpers.FileListingVisitor;
 import com.volkan.interpartitiontraverse.JsonHelper;
 import com.volkan.interpartitiontraverse.JsonKeyConstants;
 import com.volkan.interpartitiontraverse.RestConnector;
@@ -139,7 +144,8 @@ public class Main {
 				break;
 				
 			case 14:
-				generate10Jobs();
+//				generate10Jobs();
+				generateRandomJobs();
 				break;
 			default:
 				break;
@@ -163,7 +169,7 @@ public class Main {
 		switch (jsonFileName) {
 		case "6474":
 			executeJobForPortForJsonFileName(
-					"6474", "src/main/resources/jsons/erdos6474_6_143.json", 
+					"src/main/resources/jsons/erdos6474_6_143.json", 
 					executorService, h2Client);
 			break;
 		case "6475":
@@ -186,10 +192,7 @@ public class Main {
 					"6482", "src/main/resources/jsons/erdos6482_85_1000.json", 
 					executorService, h2Client);
 			break;	
-		
-		case "0"://Run ALL
-			
-		default:
+		default://Run ALL
 			executeJobForPortForJsonFileName(
 					"6474", "src/main/resources/jsons/erdos6474_6_143.json", 
 					executorService, h2Client);
@@ -228,12 +231,70 @@ public class Main {
 			
 		}
 	}
+	
+	private static void generateRandomJobs() throws Exception {
+		H2Client h2Client = new H2Client();
+		h2Client.deleteAll();
+		logger.info("deletedAll and STARTED");
+		
+		String rootDir = Utility.getValueOfProperty("jsonRootDir", "");
+		int totalRandomJobCount = Integer.parseInt(
+				Utility.getValueOfProperty("totalRandomJobCount", Integer.MAX_VALUE + ""));
+		List<String> jsonFileNames = 
+				FileListingVisitor.listRandomJsonFileNamesInDir(rootDir, totalRandomJobCount);
+		
+		long interval 	 = Long.parseLong(Utility.getValueOfProperty("interval", "0"));
+		long totalRunTime = Long.parseLong(Utility.getValueOfProperty("totalRunTime", "0"));
+		
+		ScheduledExecutorService executorService = Executors.newScheduledThreadPool(totalRandomJobCount);
+		for (String fileName : jsonFileNames) {
+			executeScheduledJobForJsonFileName(
+					fileName, interval, totalRunTime, executorService, h2Client);
+		}
+		
+//		executorService.shutdown();
+//		while (!executorService.isTerminated()) {
+//			
+//		}
+		Thread.sleep(totalRunTime * 1000);
+		executorService.shutdown();
+	}
 
+	private static void executeScheduledJobForJsonFileName(
+			String jsonFileName, long interval, long totalRunTime,
+				ScheduledExecutorService scheduler, H2Client h2Client) 
+					throws Exception {
+		Map<String, Object> jsonMap = JsonHelper.readJsonFileIntoMap(jsonFileName);
+		
+		Runnable r	= Neo4jQueryJobFactory.buildJobWithGenarateJob(h2Client, jsonMap);
+		final ScheduledFuture<?> job = 
+				scheduler.scheduleAtFixedRate(r, 0, interval, TimeUnit.SECONDS);
+		
+//		scheduler.schedule(new Runnable() {
+//			public void run() {
+//				job.cancel(true);
+//			}
+//		}, totalRunTime, TimeUnit.SECONDS);
+		
+		String port = jsonMap.get(JsonKeyConstants.START_PORT).toString();
+		logger.info("Job submitted to Neo-{}", port);
+	}
+	
 	private static void executeJobForPortForJsonFileName(
 			String port, String jsonFileName, 
 			ExecutorService executorService, H2Client h2Client) throws Exception {
 		Map<String, Object> jsonMap = generateJobInDBFromJsonFileName(h2Client, jsonFileName);
 		Runnable r					= Neo4jQueryJobFactory.buildJob(port, jsonMap);
+		executorService.execute( r );
+		logger.info("Job submitted to Neo-{}", port);
+	}
+	
+	private static void executeJobForPortForJsonFileName(
+			String jsonFileName, 
+			ExecutorService executorService, H2Client h2Client) throws Exception {
+		Map<String, Object> jsonMap = generateJobInDBFromJsonFileName(h2Client, jsonFileName);
+		String port = jsonMap.get(JsonKeyConstants.START_PORT).toString();
+		Runnable r	= Neo4jQueryJobFactory.buildJob(port, jsonMap);
 		executorService.execute( r );
 		logger.info("Job submitted to Neo-{}", port);
 	}
@@ -246,7 +307,6 @@ public class Main {
 		jsonMap.put(JsonKeyConstants.PARENT_JOB_ID, jobID);
 		return jsonMap;
 	}
-
 	
 	private static void delegateQueryToAnotherNeo4j(String url, String port, 
 													Map<String, Object> jsonMap) {	
