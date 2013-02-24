@@ -28,9 +28,9 @@ public class Neo4jClientAsync {
 				ClientResponse response = restConnector.delegateQueryWithoutResult(jsonMap);
 				String resultString = response.getEntity(String.class);
 				if( response.getStatus() == 500 ){
-					logger.info("uzaktan CAKILDI:" + jsonMap);
+					logger.error("uzaktan CAKILDI:" + jsonMap);
 				} else {
-					logger.info("uzaktan CALISTI:" + jsonMap);
+					logger.debug("uzaktan CALISTI:" + jsonMap);
 				}
 				
 				logger.debug(resultString);
@@ -55,7 +55,7 @@ public class Neo4jClientAsync {
 				List<Long> jobIDs = new ArrayList<Long>();
 				for (VJobEntity vJobEntity : list) {
 					if (vJobEntity.getVresult() != null){
-						logger.info(vJobEntity.getVresult());
+						logger.debug(vJobEntity.getVresult());
 						jobIDs.add(vJobEntity.getId());
 					}	
 				}
