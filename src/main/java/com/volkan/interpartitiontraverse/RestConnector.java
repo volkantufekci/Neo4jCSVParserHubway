@@ -1,6 +1,7 @@
 package com.volkan.interpartitiontraverse;
 
 import java.io.IOException;
+import java.io.StringBufferInputStream;
 import java.util.Map;
 
 import org.codehaus.jackson.map.ObjectMapper;
@@ -41,25 +42,28 @@ public class RestConnector {
 		
 		return result;
 	}
-	
-	public String delegateQueryWithoutResult(Map<String,Object> jsonMap){
+
+	public ClientResponse delegateQueryWithoutResult(Map<String,Object> jsonMap){
 		String result = "";
 		Client client = Client.create();
 		WebResource webResource = client.resource(urlHostAndPort
 				+ "example/service/volkan_async");
 		ObjectMapper mapper = new ObjectMapper();
 
+		ClientResponse clientResponse = null;
 		try {
-			ClientResponse clientResponse = 
+			clientResponse = 
 					webResource.type("application/json")
 					   .post(ClientResponse.class, mapper.writeValueAsString(jsonMap));
-			result = clientResponse.getEntity(String.class);
+//			result = clientResponse.getEntity(String.class);
+			
 		} catch (UniformInterfaceException | ClientHandlerException | IOException e) {
 			e.printStackTrace();
 			result = e.toString();
+			clientResponse = new ClientResponse(500, null, new StringBufferInputStream(result), null);
 		}
 		
-		return result;
+		return clientResponse;
 	}
 	
 }
