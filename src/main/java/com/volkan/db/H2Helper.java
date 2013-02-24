@@ -210,7 +210,7 @@ public class H2Helper {
 		
 		String userName = Utility.getValueOfProperty("H2user", "sa");
 		String pwd 		= Utility.getValueOfProperty("H2pwd", "");
-		logger.info("H2 Connection: {} {} {}", connectionString, userName, pwd);
+//		logger.info("H2 Connection: {} {} {}", connectionString, userName, pwd);
 		Connection con = DriverManager.getConnection(connectionString, userName, pwd);
 		return con;
 	}
