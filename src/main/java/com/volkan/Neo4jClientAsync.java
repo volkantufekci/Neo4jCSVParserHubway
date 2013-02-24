@@ -8,6 +8,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sun.jersey.api.client.ClientResponse;
 import com.volkan.db.H2Helper;
 import com.volkan.db.VJobEntity;
 import com.volkan.interpartitiontraverse.RestConnector;
@@ -23,7 +24,16 @@ public class Neo4jClientAsync {
 			@Override
 			public void run() {
 				RestConnector restConnector = new RestConnector(port);
-				logger.info("uzaktan:" + restConnector.delegateQueryWithoutResult(jsonMap));
+//				logger.info("uzaktan:" + restConnector.delegateQueryWithoutResult(jsonMap));
+				ClientResponse response = restConnector.delegateQueryWithoutResult(jsonMap);
+				String resultString = response.getEntity(String.class);
+				if( response.getStatus() == 500 ){
+					logger.info("uzaktan CAKILDI:" + jsonMap);
+				} else {
+					logger.info("uzaktan CALISTI:" + jsonMap);
+				}
+				
+				logger.debug(resultString);
 			}
 		});
 		t.start();
