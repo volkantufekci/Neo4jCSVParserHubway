@@ -232,8 +232,46 @@ public class Main {
 			
 		}
 	}
-	
+
 	private static void generateRandomJobs() throws Exception {
+		H2Client h2Client = new H2Client();
+		h2Client.deleteAll();
+		logger.info("deletedAll and STARTED");
+		
+		final JedisPool jedisPool = new JedisPool(Utility.getValueOfProperty("redisurl", null), 6379);
+		
+		String rootDir = Utility.getValueOfProperty("jsonRootDir", "");
+		int jobCountPerRound = Integer.parseInt(
+				Utility.getValueOfProperty("totalRandomJobCount", Integer.MAX_VALUE + ""));
+		
+		long interval 	 = Long.parseLong(Utility.getValueOfProperty("interval", "0"));
+	
+		ExecutorService executorService = Executors.newCachedThreadPool();
+
+		long totalRunTime = Long.parseLong(Utility.getValueOfProperty("totalRunTime", "0"));
+		int times = (int) (totalRunTime / interval);
+		for (int j = 0; j < times; j++) {
+			for(int i=0; i < jobCountPerRound; i++){
+				String jsonFileName = FileListingVisitor.randomJsonFileNameFromDir(rootDir);
+				executeJobForJsonFileName(jsonFileName, executorService, h2Client, jedisPool);
+			}
+			Thread.sleep(interval * 1000);
+		}
+			
+		executorService.shutdown();
+	}
+	
+	private static void executeJobForJsonFileName(
+			String jsonFileName, ExecutorService scheduler, H2Client h2Client, JedisPool jedisPool) 
+					throws Exception 
+	{
+		Map<String, Object> jsonMap = JsonHelper.readJsonFileIntoMap(jsonFileName);
+		
+		Runnable r = Neo4jQueryJobFactory.buildJobWithGenarateJob(h2Client, jedisPool, jsonMap);
+		scheduler.execute(r);
+	}
+	
+	private static void generateRandomJobsEski() throws Exception {
 		H2Client h2Client = new H2Client();
 		h2Client.deleteAll();
 		logger.info("deletedAll and STARTED");
@@ -255,8 +293,8 @@ public class Main {
 					fileName, interval, totalRunTime, executorService, h2Client, jedisPool);
 		}
 
-		Thread.sleep(totalRunTime * 1000);
-		executorService.shutdown();
+//		Thread.sleep(totalRunTime * 1000);
+//		executorService.shutdown();
 	}
 
 	private static void executeScheduledJobForJsonFileName(
