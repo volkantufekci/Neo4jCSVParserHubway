@@ -2,6 +2,9 @@ package com.volkan;
 
 import java.util.Map;
 
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
+
 import com.volkan.interpartitiontraverse.JsonKeyConstants;
 
 public class Neo4jQueryJobFactory {
@@ -26,14 +29,16 @@ public class Neo4jQueryJobFactory {
 	}
 
 	public static Runnable buildJobWithGenarateJob(
-			final H2Client h2Client, final Map<String, Object> jsonMap) {
+			final H2Client h2Client, final JedisPool jedisPool, final Map<String, Object> jsonMap) {
 		
 		Runnable r = new Runnable() {
 			
 			@Override
 			public void run() {
 				try {
-					String port = jsonMap.get(JsonKeyConstants.START_PORT).toString();
+//					String port = jsonMap.get(JsonKeyConstants.START_PORT).toString();
+					String port = fetchPortFromRedis(jedisPool, jsonMap);
+					
 					generateJobInDBFromJsonFileName(h2Client, jsonMap);
 					Neo4jClientAsync neo4jClientAsync = new Neo4jClientAsync();
 					neo4jClientAsync.delegateQueryAsync(port, jsonMap);
@@ -42,6 +47,14 @@ public class Neo4jQueryJobFactory {
 					e.printStackTrace();
 				}
 				
+			}
+
+			private String fetchPortFromRedis(final JedisPool jedisPool,
+					final Map<String, Object> jsonMap) {
+				Jedis jedis = jedisPool.getResource();
+				String port = jedis.get("gid:"+jsonMap.get(JsonKeyConstants.START_NODE));
+				jedisPool.returnResource(jedis);
+				return port;
 			}
 		};
 		

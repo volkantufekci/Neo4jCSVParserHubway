@@ -2,7 +2,6 @@ package com.volkan;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -21,6 +20,8 @@ import org.neo4j.graphdb.traversal.Evaluators;
 import org.neo4j.kernel.Traversal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import redis.clients.jedis.JedisPool;
 
 import com.volkan.db.H2Helper;
 import com.volkan.db.VJobEntity;
@@ -237,6 +238,8 @@ public class Main {
 		h2Client.deleteAll();
 		logger.info("deletedAll and STARTED");
 		
+		final JedisPool jedisPool = new JedisPool(Utility.getValueOfProperty("redisurl", null), 6379);
+		
 		String rootDir = Utility.getValueOfProperty("jsonRootDir", "");
 		int totalRandomJobCount = Integer.parseInt(
 				Utility.getValueOfProperty("totalRandomJobCount", Integer.MAX_VALUE + ""));
@@ -249,24 +252,21 @@ public class Main {
 		ScheduledExecutorService executorService = Executors.newScheduledThreadPool(totalRandomJobCount);
 		for (String fileName : jsonFileNames) {
 			executeScheduledJobForJsonFileName(
-					fileName, interval, totalRunTime, executorService, h2Client);
+					fileName, interval, totalRunTime, executorService, h2Client, jedisPool);
 		}
-		
-//		executorService.shutdown();
-//		while (!executorService.isTerminated()) {
-//			
-//		}
+
 		Thread.sleep(totalRunTime * 1000);
 		executorService.shutdown();
 	}
 
 	private static void executeScheduledJobForJsonFileName(
 			String jsonFileName, long interval, long totalRunTime,
-				ScheduledExecutorService scheduler, H2Client h2Client) 
+				ScheduledExecutorService scheduler, H2Client h2Client, JedisPool jedisPool) 
 					throws Exception {
 		Map<String, Object> jsonMap = JsonHelper.readJsonFileIntoMap(jsonFileName);
 		
-		Runnable r	= Neo4jQueryJobFactory.buildJobWithGenarateJob(h2Client, jsonMap);
+		Runnable r	= 
+				Neo4jQueryJobFactory.buildJobWithGenarateJob(h2Client, jedisPool, jsonMap);
 		final ScheduledFuture<?> job = 
 				scheduler.scheduleAtFixedRate(r, 0, interval, TimeUnit.SECONDS);
 		
