@@ -29,6 +29,16 @@ public final class FileListingVisitor {
 		}
 	}
 
+	public static String randomJsonFileNameFromDir(String rootDir) throws IOException {
+		
+		List<String> fileNames = listJsonFileNamesInDir(rootDir);
+		
+		Random random = new Random();
+		int randomNumber = random.nextInt(fileNames.size());
+
+		return fileNames.get(randomNumber);
+	}
+	
 	public static List<String> listRandomJsonFileNamesInDir(String rootDir, int totalRandomCount)
 			throws IOException {
 		
