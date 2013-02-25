@@ -68,7 +68,7 @@ public class GPartPartitioner {
 		//SCOTCH
 		Process pr = Runtime.getRuntime().exec("gpart " + partitionCount + " " 
 				+ Configuration.GPART_GRF_PATH + " " + Configuration.GPART_RESULT_PATH
-				+ " -b0.5 -vmst");
+				+ " -b0.05 -vmst");
 		pr.waitFor();
 		BufferedReader buf = new BufferedReader(new InputStreamReader(pr.getInputStream()));
 

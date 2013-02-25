@@ -35,15 +35,15 @@ public class MainAccessPattern {
 
 	private static final Logger logger = LoggerFactory.getLogger(MainAccessPattern.class);
 	
-	private static final int RANDOM_ACCESS_COUNT = 100;
+	private static final int RANDOM_ACCESS_COUNT = 200;
 	private static final int MAX_NODE_COUNT 	 = 1850065;
-	private static final int PARTITION_COUNT 	 = 10;
+	private static final int PARTITION_COUNT 	 = 5;
 	private static final int LAST_PARTITION		 = 6483;
 	private static int maxNodeCountInDBAP 		 = 0;
 
 	private static final String DB_PATH = System.getProperty("user.home") +  
-			"/Development/tez/Neo4jSurumleri/neo4j-community-1.8.M07erdos/data/graph.db/";
-//			"/erdos8474notindexed.201301151430.graph.db/";
+//			"/Development/tez/Neo4jSurumleri/neo4j-community-1.8.M07erdos/data/graph.db/";
+			"/erdos8474notindexed.201301151430.graph.db/";
 	private static GraphDatabaseService db, dbAP;
 	private static final String refKeyName = "hashCode";
 	private static final String refIndexName = "refNodes";
@@ -64,6 +64,7 @@ public class MainAccessPattern {
 	
 	public static void main(String[] args) throws Exception {
 		Runtime.getRuntime().exec("rm -rf "+Configuration.DB_AP_PATH);
+		Thread.sleep(5000);
 		db = new GraphDatabaseFactory().newEmbeddedDatabase(DB_PATH);
 		dbAP = new GraphDatabaseFactory().newEmbeddedDatabase(Configuration.DB_AP_PATH);
 		registerShutdownHook();

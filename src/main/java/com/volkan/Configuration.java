@@ -29,8 +29,9 @@ public class Configuration {
 	
 	public static final String BASE_URL_OF_NEO4J_INSTANCES = "http://localhost";
 	
-	public static final String DB_AP_PATH = System.getProperty("user.home") +  
-			"/dbAccessPattern.graph.db/";
+//	public static final String DB_AP_PATH = System.getProperty("user.home") +  
+//			"/dbAccessPattern.graph.db/";
+	public static final String DB_AP_PATH = "/mnt/v/dbAccessPattern.graph.db/";
 
 	public static final String GPART_RESULT_PATH = System.getProperty("user.home") + 
 			"/result.map";
