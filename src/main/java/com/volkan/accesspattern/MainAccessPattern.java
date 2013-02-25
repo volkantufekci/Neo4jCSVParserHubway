@@ -1,9 +1,10 @@
 package com.volkan.accesspattern;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -12,8 +13,6 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import org.neo4j.graphdb.Direction;
-import org.neo4j.graphdb.DynamicRelationshipType;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Path;
@@ -22,16 +21,21 @@ import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.index.UniqueFactory;
-import org.neo4j.graphdb.traversal.Evaluators;
 import org.neo4j.graphdb.traversal.TraversalDescription;
-import org.neo4j.kernel.Traversal;
-import org.neo4j.kernel.Uniqueness;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.volkan.Configuration;
+import com.volkan.helpers.FileHelper;
+import com.volkan.interpartitiontraverse.JsonHelper;
+import com.volkan.interpartitiontraverse.JsonKeyConstants;
+import com.volkan.interpartitiontraverse.TraversalDescriptionBuilder;
 
 public class MainAccessPattern {
 
-	private static final int RANDOM_ACCESS_COUNT = 10;
+	private static final Logger logger = LoggerFactory.getLogger(MainAccessPattern.class);
+	
+	private static final int RANDOM_ACCESS_COUNT = 100;
 	private static final int MAX_NODE_COUNT 	 = 1850065;
 	private static final int PARTITION_COUNT 	 = 10;
 	private static final int LAST_PARTITION		 = 6483;
@@ -58,7 +62,7 @@ public class MainAccessPattern {
 	private static Set<String> cache = new HashSet<>();
 	
 	
-	public static void main(String[] args) throws IOException, InterruptedException {
+	public static void main(String[] args) throws Exception {
 		Runtime.getRuntime().exec("rm -rf "+Configuration.DB_AP_PATH);
 		db = new GraphDatabaseFactory().newEmbeddedDatabase(DB_PATH);
 		dbAP = new GraphDatabaseFactory().newEmbeddedDatabase(Configuration.DB_AP_PATH);
@@ -69,55 +73,140 @@ public class MainAccessPattern {
 		allNormalNodeIndex = dbAP.index().forNodes( allNormalNodeIndexName );
 		normalNodeIndex = dbAP.index().forNodes( normalNodeIndexName );
 				
-		createRandomAccessPatterns();
+		//RECOMMENDATION
+		Map<String, Object> jsonMap = 
+				JsonHelper.createJsonMapWithDirectionsAndRelTypes(
+						Arrays.asList("OUT", "IN", "OUT"), 
+						Arrays.asList("follows", "follows", "follows"));
+		String jsonsOutputDir 	= "src/main/resources/jsons/erdos/3depth/";
+		String ending		  	= "out_in_out.json";
+		createJsonOutputDir(jsonsOutputDir);
+		createRandomAccessPatterns(jsonMap, jsonsOutputDir, ending);
+
+		//2 Depths
+		jsonMap = JsonHelper.createJsonMapWithDirectionsAndRelTypes(
+						Arrays.asList("OUT", "OUT"), Arrays.asList("follows", "follows"));
+		jsonsOutputDir = "src/main/resources/jsons/erdos/2depth/";
+		ending		  = "out_out.json";
+		createJsonOutputDir(jsonsOutputDir);
+		createRandomAccessPatterns(jsonMap, jsonsOutputDir, ending);
+		
+		jsonMap = JsonHelper.createJsonMapWithDirectionsAndRelTypes(
+						Arrays.asList("OUT", "IN"), Arrays.asList("follows", "follows"));
+		ending		  = "out_in.json";
+		createRandomAccessPatterns(jsonMap, jsonsOutputDir, ending);
+		
+		jsonMap = JsonHelper.createJsonMapWithDirectionsAndRelTypes(
+						Arrays.asList("IN", "IN"), Arrays.asList("follows", "follows"));
+		ending = "in_in.json";
+		createRandomAccessPatterns(jsonMap, jsonsOutputDir, ending);
+		
+		//FOLLOWERS
+		jsonMap = JsonHelper.createJsonMapWithDirectionsAndRelTypes(
+						Arrays.asList("IN"), Arrays.asList("follows"));
+		jsonsOutputDir 	= "src/main/resources/jsons/erdos/1depth/";
+		createJsonOutputDir(jsonsOutputDir);
+		ending = "in.json";
+		createRandomAccessPatterns(jsonMap, jsonsOutputDir, ending);
+		
+		//FRIENDS
+		jsonMap = JsonHelper.createJsonMapWithDirectionsAndRelTypes(
+				Arrays.asList("OUT"), Arrays.asList("follows"));
+		ending = "out.json";
+		createRandomAccessPatterns(jsonMap, jsonsOutputDir, ending);		
+		
 		operateGparting();
 	}
 
-	private static void createRandomAccessPatterns() throws IOException {
-		List<Integer> randomIDs = createRandomIDs();
-//		List<Integer> randomIDs = Arrays.asList(1527971,1824940);
+	private static void createJsonOutputDir(String jsonsOutputDir) {
+		logger.info(jsonsOutputDir+" is created if not existing");
+		File f = new File(jsonsOutputDir);
+		f.mkdirs();
+		FileHelper.deleteFilesUnderFile(f);
+	}
+
+	private static void createRandomAccessPatterns(
+			Map<String, Object> jsonMap, String directory, String ending) throws Exception 
+	{
+		logger.info("Creating random access patterns for json:\n" +jsonMap
+				+"\n in dir:"+directory+" with ending "+ending);
+		TraversalDescription traversalDescription = 
+				TraversalDescriptionBuilder.buildFromJsonMap(jsonMap);
 		
-		writeRandomIDs(randomIDs);
-		
-		TraversalDescription traversalDescription = createTraversalDesc();
+		Set<Integer> randomIDSet = createRandomIDs();
 		int i = 0;
-		for (Integer randomID : randomIDs) {
-			System.out.println("islenen randomID: " + randomID + " count: " + ++i);
-			Node startNode = db.getNodeById(randomID);
-			
-			SortedSet<Long> set = putNodeIDsInPathIntoSet(traversalDescription, startNode);
+		for (Integer randomID : randomIDSet) {
+			SortedSet<Long> set = 
+					collectConnectedNodeIDsOfStartNodeID(randomID, traversalDescription);
+			System.out.println("randomID: "+randomID+" size="+set.size()+" count: "+ ++i);	
+			if (nodeSetSizeIsTooBigForTests(set)) {
+				continue;
+			}
 			
 			String hashCode = generateHashCodeOfNodeIDsInPath(set);
 			if (!cache.contains(hashCode)) {
 				cache.add(hashCode);
-				Transaction tx = dbAP.beginTx();
-				try {
-					Node refNode = refNodeIndex.get(refKeyName, hashCode).getSingle();
-					if (refNode == null) {
-						refNode = createRefNodeAndAddToIndex(hashCode, randomID);
-						createNodesInPathIfNeededAndConnectToRefNode(set, refNode);
-					}
-					
-					tx.success();
-				} catch (Exception e) {
-					e.printStackTrace();
-				} finally {
-					tx.finish();
-				}
+				createNodesInDBAP(randomID, set, hashCode);
+				writeJsonToFile(jsonMap, directory, ending, randomID);
 			} else {
 				System.out.println("PASSS");
 			}
 		}
 	}
 
+	private static boolean nodeSetSizeIsTooBigForTests(SortedSet<Long> set) {
+		return set.size() > 100_000;
+	}
+
+	private static void writeJsonToFile(Map<String, Object> jsonMap,
+			String directory, String ending, Integer randomID)
+			throws IOException, Exception {
+		jsonMap.put(JsonKeyConstants.START_NODE, randomID);
+		FileHelper.writeToFile(
+				JsonHelper.writeMapIntoJsonString(jsonMap), 
+				directory+"/"+randomID+ending);
+	}
+
+	private static void createNodesInDBAP(
+			Integer randomID, SortedSet<Long> set, String hashCode) throws Exception 
+	{
+		Transaction tx = dbAP.beginTx();
+		try {
+			Node refNode = refNodeIndex.get(refKeyName, hashCode).getSingle();
+			if (refNode == null) {
+				refNode = createRefNodeAndAddToIndex(hashCode, randomID);
+				createNodesInPathIfNeededAndConnectToRefNode(set, refNode);
+			}
+			
+			tx.success();
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new Exception(e.toString());
+		} finally {
+			tx.finish();
+		}
+	}
+
+	private static SortedSet<Long> collectConnectedNodeIDsOfStartNodeID(
+			Integer startNodeID, TraversalDescription traversalDescription) 
+	{
+		Node startNode 		= db.getNodeById(startNodeID);
+		SortedSet<Long> set = putNodeIDsInPathIntoSet(traversalDescription, startNode);
+		return set;
+	}
+	
 	private static SortedSet<Long> putNodeIDsInPathIntoSet(
-			TraversalDescription traversalDescription, Node startNode) {
+			TraversalDescription traversalDescription, Node startNode) 
+	{
 		SortedSet<Long> set = new TreeSet<>(); 
+		int i = 0;
 		for (Path path : traversalDescription.traverse(startNode)) {
 			for (Node node : path.nodes()) {
 				set.add(node.getId());
 			}
+			i++;
 		}
+		logger.debug("nei count for {}={}", startNode.getId(), i);
 		return set;
 	}
 	
@@ -167,18 +256,10 @@ public class MainAccessPattern {
 		return hashCode;
 	}
 
-	private static TraversalDescription createTraversalDesc() {
-		TraversalDescription traversalDescription = 
-				Traversal.description().evaluator(Evaluators.atDepth(2))
-				.relationships(DynamicRelationshipType.withName("follows"), Direction.OUTGOING)
-				.uniqueness(Uniqueness.NONE);
-		return traversalDescription;
-	}
-
-	private static List<Integer> createRandomIDs() {
+	private static Set<Integer> createRandomIDs() {
 		Random random = new Random();
 		//1850065ten kucuk 100K random sayi uret
-		List<Integer> randomIDs = new ArrayList<Integer>(100);
+		Set<Integer> randomIDs = new HashSet<>(RANDOM_ACCESS_COUNT);
 		for (int i = 0; i < RANDOM_ACCESS_COUNT; i++) {
 			int randomID = random.nextInt(MAX_NODE_COUNT) + 1;
 			randomIDs.add(randomID);
@@ -186,6 +267,13 @@ public class MainAccessPattern {
 		return randomIDs;
 	}
 	
+	/** Taken from Neo4j docs, not used
+	 * @param propertyValue
+	 * @param graphDb
+	 * @param indexName
+	 * @param keyName
+	 * @return
+	 */
 	public static Node getOrCreateUserWithUniqueFactory( 
 			String propertyValue, GraphDatabaseService graphDb, String indexName, final String keyName )
 	{
