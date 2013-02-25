@@ -275,9 +275,6 @@ public class Main {
 //				job.cancel(true);
 //			}
 //		}, totalRunTime, TimeUnit.SECONDS);
-		
-		String port = jsonMap.get(JsonKeyConstants.START_PORT).toString();
-		logger.info("Job submitted to Neo-{}", port);
 	}
 	
 	private static void executeJobForPortForJsonFileName(

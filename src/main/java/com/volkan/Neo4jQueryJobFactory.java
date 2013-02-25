@@ -2,12 +2,17 @@ package com.volkan;
 
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
 import com.volkan.interpartitiontraverse.JsonKeyConstants;
 
 public class Neo4jQueryJobFactory {
+
+	private static final Logger logger = LoggerFactory.getLogger(Neo4jQueryJobFactory.class);
 
 	public static Runnable buildJob(final String port, final Map<String, Object> jsonMap) {
 		Runnable r = new Runnable() {
@@ -38,10 +43,10 @@ public class Neo4jQueryJobFactory {
 				try {
 //					String port = jsonMap.get(JsonKeyConstants.START_PORT).toString();
 					String port = fetchPortFromRedis(jedisPool, jsonMap);
-					
 					generateJobInDBFromJsonFileName(h2Client, jsonMap);
 					Neo4jClientAsync neo4jClientAsync = new Neo4jClientAsync();
 					neo4jClientAsync.delegateQueryAsync(port, jsonMap);
+					logger.info("Job submitted to Neo-{}", port);
 					neo4jClientAsync.periodicFetcher((long) jsonMap.get(JsonKeyConstants.PARENT_JOB_ID));
 				} catch (Exception e) {
 					e.printStackTrace();
