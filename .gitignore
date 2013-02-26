@@ -41,3 +41,5 @@ nodeIDGidMapForRuby
 randomIDs
 relsVOS.txt
 relsVOSUfak.txt
+
+src/main/resources/jsons/erdos/
