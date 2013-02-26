@@ -35,9 +35,9 @@ public class MainAccessPattern {
 
 	private static final Logger logger = LoggerFactory.getLogger(MainAccessPattern.class);
 	
-	private static final int RANDOM_ACCESS_COUNT = 10000;
+	private static final int RANDOM_ACCESS_COUNT = 100;
 	private static final int MAX_NODE_COUNT 	 = 1850065;
-	private static final int PARTITION_COUNT 	 = 10;
+	private static final int PARTITION_COUNT 	 = 3;
 	private static final int LAST_PARTITION		 = 6483;
 	private static int maxNodeCountInDBAP 		 = 0;
 
@@ -75,32 +75,32 @@ public class MainAccessPattern {
 		normalNodeIndex = dbAP.index().forNodes( normalNodeIndexName );
 				
 		//RECOMMENDATION
-		Map<String, Object> jsonMap = 
-				JsonHelper.createJsonMapWithDirectionsAndRelTypes(
-						Arrays.asList("OUT", "IN", "OUT"), 
-						Arrays.asList("follows", "follows", "follows"));
-		String jsonsOutputDir 	= "src/main/resources/jsons/erdos/3depth/";
-		String ending		  	= "out_in_out.json";
-		createJsonOutputDir(jsonsOutputDir);
-		createRandomAccessPatterns(jsonMap, jsonsOutputDir, ending);
-
-//		//2 Depths
-//		jsonMap = JsonHelper.createJsonMapWithDirectionsAndRelTypes(
-//						Arrays.asList("OUT", "OUT"), Arrays.asList("follows", "follows"));
-//		jsonsOutputDir = "src/main/resources/jsons/erdos/2depth/";
-//		ending		  = "out_out.json";
+//		Map<String, Object> jsonMap = 
+//				JsonHelper.createJsonMapWithDirectionsAndRelTypes(
+//						Arrays.asList("OUT", "IN", "OUT"), 
+//						Arrays.asList("follows", "follows", "follows"));
+//		String jsonsOutputDir 	= "src/main/resources/jsons/erdos/3depth/";
+//		String ending		  	= "out_in_out.json";
 //		createJsonOutputDir(jsonsOutputDir);
 //		createRandomAccessPatterns(jsonMap, jsonsOutputDir, ending);
-//		
-//		jsonMap = JsonHelper.createJsonMapWithDirectionsAndRelTypes(
-//						Arrays.asList("OUT", "IN"), Arrays.asList("follows", "follows"));
-//		ending		  = "out_in.json";
-//		createRandomAccessPatterns(jsonMap, jsonsOutputDir, ending);
-//		
-//		jsonMap = JsonHelper.createJsonMapWithDirectionsAndRelTypes(
-//						Arrays.asList("IN", "IN"), Arrays.asList("follows", "follows"));
-//		ending = "in_in.json";
-//		createRandomAccessPatterns(jsonMap, jsonsOutputDir, ending);
+
+//		//2 Depths
+		Map<String, Object> jsonMap = JsonHelper.createJsonMapWithDirectionsAndRelTypes(
+						Arrays.asList("OUT", "OUT"), Arrays.asList("follows", "follows"));
+		String jsonsOutputDir = "src/main/resources/jsons/erdos/2depth/";
+		String ending		  = "out_out.json";
+		createJsonOutputDir(jsonsOutputDir);
+		createRandomAccessPatterns(jsonMap, jsonsOutputDir, ending);
+		
+		jsonMap = JsonHelper.createJsonMapWithDirectionsAndRelTypes(
+						Arrays.asList("OUT", "IN"), Arrays.asList("follows", "follows"));
+		ending		  = "out_in.json";
+		createRandomAccessPatterns(jsonMap, jsonsOutputDir, ending);
+		
+		jsonMap = JsonHelper.createJsonMapWithDirectionsAndRelTypes(
+						Arrays.asList("IN", "IN"), Arrays.asList("follows", "follows"));
+		ending = "in_in.json";
+		createRandomAccessPatterns(jsonMap, jsonsOutputDir, ending);
 //		
 //		//FOLLOWERS
 //		jsonMap = JsonHelper.createJsonMapWithDirectionsAndRelTypes(
@@ -141,22 +141,23 @@ public class MainAccessPattern {
 					collectConnectedNodeIDsOfStartNodeID(randomID, traversalDescription);
 			System.out.println("randomID: "+randomID+" size="+set.size()+" count: "+ ++i);	
 			if (nodeSetSizeIsTooBigForTests(set)) {
+				System.out.println("nodeSetSizeIsTooBigForTests, PASSS");
 				continue;
 			}
 			
 			String hashCode = generateHashCodeOfNodeIDsInPath(set);
-//			if (!cache.contains(hashCode)) {
+			if (!cache.contains(hashCode)) {
 				cache.add(hashCode);
 				createNodesInDBAP(randomID, set, hashCode);
 				writeJsonToFile(jsonMap, directory, ending, randomID);
-//			} else {
-//				System.out.println("PASSS");
-//			}
+			} else {
+				System.out.println("PASSS");
+			}
 		}
 	}
 
 	private static boolean nodeSetSizeIsTooBigForTests(SortedSet<Long> set) {
-		return set.size() > 100_000;
+		return set.size() > 10_000;
 	}
 
 	private static void writeJsonToFile(Map<String, Object> jsonMap,
@@ -173,11 +174,11 @@ public class MainAccessPattern {
 	{
 		Transaction tx = dbAP.beginTx();
 		try {
-//			Node refNode = refNodeIndex.get(refKeyName, hashCode).getSingle();
-//			if (refNode == null) {
-			Node refNode = createRefNodeAndAddToIndex(hashCode, randomID);
+			Node refNode = refNodeIndex.get(refKeyName, hashCode).getSingle();
+			if (refNode == null) {
+				refNode = createRefNodeAndAddToIndex(hashCode, randomID);
 				createNodesInPathIfNeededAndConnectToRefNode(set, refNode);
-//			}
+			}
 			
 			tx.success();
 		} catch (Exception e) {
@@ -252,7 +253,6 @@ public class MainAccessPattern {
 			sb.append(id).append(",");
 		}
 		
-//		System.out.println(sb.toString());
 		String hashCode = sb.toString().hashCode() + "";
 		return hashCode;
 	}
