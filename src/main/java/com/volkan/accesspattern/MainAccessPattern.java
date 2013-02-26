@@ -35,9 +35,9 @@ public class MainAccessPattern {
 
 	private static final Logger logger = LoggerFactory.getLogger(MainAccessPattern.class);
 	
-	private static final int RANDOM_ACCESS_COUNT = 200;
+	private static final int RANDOM_ACCESS_COUNT = 10000;
 	private static final int MAX_NODE_COUNT 	 = 1850065;
-	private static final int PARTITION_COUNT 	 = 5;
+	private static final int PARTITION_COUNT 	 = 10;
 	private static final int LAST_PARTITION		 = 6483;
 	private static int maxNodeCountInDBAP 		 = 0;
 
@@ -84,37 +84,37 @@ public class MainAccessPattern {
 		createJsonOutputDir(jsonsOutputDir);
 		createRandomAccessPatterns(jsonMap, jsonsOutputDir, ending);
 
-		//2 Depths
-		jsonMap = JsonHelper.createJsonMapWithDirectionsAndRelTypes(
-						Arrays.asList("OUT", "OUT"), Arrays.asList("follows", "follows"));
-		jsonsOutputDir = "src/main/resources/jsons/erdos/2depth/";
-		ending		  = "out_out.json";
-		createJsonOutputDir(jsonsOutputDir);
-		createRandomAccessPatterns(jsonMap, jsonsOutputDir, ending);
-		
-		jsonMap = JsonHelper.createJsonMapWithDirectionsAndRelTypes(
-						Arrays.asList("OUT", "IN"), Arrays.asList("follows", "follows"));
-		ending		  = "out_in.json";
-		createRandomAccessPatterns(jsonMap, jsonsOutputDir, ending);
-		
-		jsonMap = JsonHelper.createJsonMapWithDirectionsAndRelTypes(
-						Arrays.asList("IN", "IN"), Arrays.asList("follows", "follows"));
-		ending = "in_in.json";
-		createRandomAccessPatterns(jsonMap, jsonsOutputDir, ending);
-		
-		//FOLLOWERS
-		jsonMap = JsonHelper.createJsonMapWithDirectionsAndRelTypes(
-						Arrays.asList("IN"), Arrays.asList("follows"));
-		jsonsOutputDir 	= "src/main/resources/jsons/erdos/1depth/";
-		createJsonOutputDir(jsonsOutputDir);
-		ending = "in.json";
-		createRandomAccessPatterns(jsonMap, jsonsOutputDir, ending);
-		
-		//FRIENDS
-		jsonMap = JsonHelper.createJsonMapWithDirectionsAndRelTypes(
-				Arrays.asList("OUT"), Arrays.asList("follows"));
-		ending = "out.json";
-		createRandomAccessPatterns(jsonMap, jsonsOutputDir, ending);		
+//		//2 Depths
+//		jsonMap = JsonHelper.createJsonMapWithDirectionsAndRelTypes(
+//						Arrays.asList("OUT", "OUT"), Arrays.asList("follows", "follows"));
+//		jsonsOutputDir = "src/main/resources/jsons/erdos/2depth/";
+//		ending		  = "out_out.json";
+//		createJsonOutputDir(jsonsOutputDir);
+//		createRandomAccessPatterns(jsonMap, jsonsOutputDir, ending);
+//		
+//		jsonMap = JsonHelper.createJsonMapWithDirectionsAndRelTypes(
+//						Arrays.asList("OUT", "IN"), Arrays.asList("follows", "follows"));
+//		ending		  = "out_in.json";
+//		createRandomAccessPatterns(jsonMap, jsonsOutputDir, ending);
+//		
+//		jsonMap = JsonHelper.createJsonMapWithDirectionsAndRelTypes(
+//						Arrays.asList("IN", "IN"), Arrays.asList("follows", "follows"));
+//		ending = "in_in.json";
+//		createRandomAccessPatterns(jsonMap, jsonsOutputDir, ending);
+//		
+//		//FOLLOWERS
+//		jsonMap = JsonHelper.createJsonMapWithDirectionsAndRelTypes(
+//						Arrays.asList("IN"), Arrays.asList("follows"));
+//		jsonsOutputDir 	= "src/main/resources/jsons/erdos/1depth/";
+//		createJsonOutputDir(jsonsOutputDir);
+//		ending = "in.json";
+//		createRandomAccessPatterns(jsonMap, jsonsOutputDir, ending);
+//		
+//		//FRIENDS
+//		jsonMap = JsonHelper.createJsonMapWithDirectionsAndRelTypes(
+//				Arrays.asList("OUT"), Arrays.asList("follows"));
+//		ending = "out.json";
+//		createRandomAccessPatterns(jsonMap, jsonsOutputDir, ending);		
 		
 		operateGparting();
 	}
@@ -145,13 +145,13 @@ public class MainAccessPattern {
 			}
 			
 			String hashCode = generateHashCodeOfNodeIDsInPath(set);
-			if (!cache.contains(hashCode)) {
+//			if (!cache.contains(hashCode)) {
 				cache.add(hashCode);
 				createNodesInDBAP(randomID, set, hashCode);
 				writeJsonToFile(jsonMap, directory, ending, randomID);
-			} else {
-				System.out.println("PASSS");
-			}
+//			} else {
+//				System.out.println("PASSS");
+//			}
 		}
 	}
 
@@ -173,11 +173,11 @@ public class MainAccessPattern {
 	{
 		Transaction tx = dbAP.beginTx();
 		try {
-			Node refNode = refNodeIndex.get(refKeyName, hashCode).getSingle();
-			if (refNode == null) {
-				refNode = createRefNodeAndAddToIndex(hashCode, randomID);
+//			Node refNode = refNodeIndex.get(refKeyName, hashCode).getSingle();
+//			if (refNode == null) {
+			Node refNode = createRefNodeAndAddToIndex(hashCode, randomID);
 				createNodesInPathIfNeededAndConnectToRefNode(set, refNode);
-			}
+//			}
 			
 			tx.success();
 		} catch (Exception e) {
