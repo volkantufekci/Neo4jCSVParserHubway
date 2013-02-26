@@ -85,7 +85,7 @@ public final class FileListingVisitor {
 		@Override
 		public FileVisitResult preVisitDirectory(Path aDir,
 				BasicFileAttributes aAttrs) throws IOException {
-			System.out.println("Processing directory:" + aDir);
+//			System.out.println("Processing directory:" + aDir);
 			return FileVisitResult.CONTINUE;
 		}
 	}
