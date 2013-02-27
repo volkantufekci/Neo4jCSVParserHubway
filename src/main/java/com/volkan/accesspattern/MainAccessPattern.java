@@ -38,7 +38,7 @@ public class MainAccessPattern {
 	
 	private static int RANDOM_ACCESS_COUNT;
 	protected static final int MAX_NODE_COUNT 	 = 1850065;
-	protected static int PARTITION_COUNT;
+	private static int PARTITION_COUNT;
 	private static final int LAST_PARTITION		 = 6483;
 	private static int maxNodeCountInDBAP 		 = 0;
 

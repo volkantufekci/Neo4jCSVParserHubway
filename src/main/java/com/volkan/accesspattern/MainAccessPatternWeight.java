@@ -16,6 +16,7 @@ import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.volkan.Utility;
 import com.volkan.interpartitiontraverse.JsonHelper;
 import com.volkan.interpartitiontraverse.TraversalDescriptionBuilder;
 
@@ -24,6 +25,7 @@ public class MainAccessPatternWeight extends MainAccessPattern {
 	private static final Logger logger = LoggerFactory.getLogger(MainAccessPatternWeight.class);
 
 	private static final int EDGE_WEIGHT = 5;
+	private static int PARTITION_COUNT;
 //	private static final String DB_PATH = System.getProperty("user.home") +  
 //			"/Development/tez/Neo4jSurumleri/neo4j-community-1.8.M07erdos/data/graph.db/";
 //			"/erdos8474notindexed.201301151430.graph.db/";
@@ -32,7 +34,9 @@ public class MainAccessPatternWeight extends MainAccessPattern {
 	protected static GraphDatabaseService db;
 
 	public static void main(String[] args) throws Exception {
-		prepareConstants();
+		DB_PATH = Utility.getValueOfProperty("erdosTekParcaDB_PATH", 
+				"/erdos8474notindexed.201301151430.graph.db/");
+		PARTITION_COUNT = Integer.parseInt(Utility.getValueOfProperty("PARTITION_COUNT", "0"));
 		db = new GraphDatabaseFactory().newEmbeddedDatabase(DB_PATH);
 		registerShutdownHook();
 		
