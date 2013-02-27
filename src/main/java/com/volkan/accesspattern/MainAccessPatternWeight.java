@@ -25,8 +25,8 @@ public class MainAccessPatternWeight extends MainAccessPattern {
 
 	private static final int EDGE_WEIGHT = 5;
 	private static final String DB_PATH = System.getProperty("user.home") +  
-			"/Development/tez/Neo4jSurumleri/neo4j-community-1.8.M07erdos/data/graph.db/";
-//			"/erdos8474notindexed.201301151430.graph.db/";
+//			"/Development/tez/Neo4jSurumleri/neo4j-community-1.8.M07erdos/data/graph.db/";
+			"/erdos8474notindexed.201301151430.graph.db/";
 	protected static GraphDatabaseService db;
 
 	public static void main(String[] args) throws Exception {
