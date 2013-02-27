@@ -16,6 +16,7 @@ import java.util.TreeSet;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Path;
+import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
@@ -35,16 +36,18 @@ public class MainAccessPattern {
 
 	private static final Logger logger = LoggerFactory.getLogger(MainAccessPattern.class);
 	
-	private static final int RANDOM_ACCESS_COUNT = 100;
-	private static final int MAX_NODE_COUNT 	 = 1850065;
-	private static final int PARTITION_COUNT 	 = 3;
+	private static final int RANDOM_ACCESS_COUNT = 3;
+	protected static final int MAX_NODE_COUNT 	 = 1850065;
+	protected static final int PARTITION_COUNT 	 = 3;
 	private static final int LAST_PARTITION		 = 6483;
 	private static int maxNodeCountInDBAP 		 = 0;
 
 	private static final String DB_PATH = System.getProperty("user.home") +  
-//			"/Development/tez/Neo4jSurumleri/neo4j-community-1.8.M07erdos/data/graph.db/";
-			"/erdos8474notindexed.201301151430.graph.db/";
-	private static GraphDatabaseService db, dbAP;
+			"/Development/tez/Neo4jSurumleri/neo4j-community-1.8.M07erdos/data/graph.db/";
+//			"/erdos8474notindexed.201301151430.graph.db/";
+	protected static GraphDatabaseService db;
+
+	private static GraphDatabaseService dbAP;
 	private static final String refKeyName = "hashCode";
 	private static final String refIndexName = "refNodes";
 	
@@ -86,21 +89,21 @@ public class MainAccessPattern {
 
 //		//2 Depths
 		Map<String, Object> jsonMap = JsonHelper.createJsonMapWithDirectionsAndRelTypes(
-						Arrays.asList("OUT", "OUT"), Arrays.asList("follows", "follows"));
+						Arrays.asList("OUT", "IN"), Arrays.asList("follows", "follows"));
 		String jsonsOutputDir = "src/main/resources/jsons/erdos/2depth/";
 		String ending		  = "out_out.json";
 		createJsonOutputDir(jsonsOutputDir);
 		createRandomAccessPatterns(jsonMap, jsonsOutputDir, ending);
 		
-		jsonMap = JsonHelper.createJsonMapWithDirectionsAndRelTypes(
-						Arrays.asList("OUT", "IN"), Arrays.asList("follows", "follows"));
-		ending		  = "out_in.json";
-		createRandomAccessPatterns(jsonMap, jsonsOutputDir, ending);
-		
-		jsonMap = JsonHelper.createJsonMapWithDirectionsAndRelTypes(
-						Arrays.asList("IN", "IN"), Arrays.asList("follows", "follows"));
-		ending = "in_in.json";
-		createRandomAccessPatterns(jsonMap, jsonsOutputDir, ending);
+//		jsonMap = JsonHelper.createJsonMapWithDirectionsAndRelTypes(
+//						Arrays.asList("OUT", "IN"), Arrays.asList("follows", "follows"));
+//		ending		  = "out_in.json";
+//		createRandomAccessPatterns(jsonMap, jsonsOutputDir, ending);
+//		
+//		jsonMap = JsonHelper.createJsonMapWithDirectionsAndRelTypes(
+//						Arrays.asList("IN", "IN"), Arrays.asList("follows", "follows"));
+//		ending = "in_in.json";
+//		createRandomAccessPatterns(jsonMap, jsonsOutputDir, ending);
 //		
 //		//FOLLOWERS
 //		jsonMap = JsonHelper.createJsonMapWithDirectionsAndRelTypes(
@@ -116,10 +119,10 @@ public class MainAccessPattern {
 //		ending = "out.json";
 //		createRandomAccessPatterns(jsonMap, jsonsOutputDir, ending);		
 		
-		operateGparting();
+//		operateGparting();
 	}
 
-	private static void createJsonOutputDir(String jsonsOutputDir) {
+	protected static void createJsonOutputDir(String jsonsOutputDir) {
 		logger.info(jsonsOutputDir+" is created if not existing");
 		File f = new File(jsonsOutputDir);
 		f.mkdirs();
@@ -132,7 +135,7 @@ public class MainAccessPattern {
 		logger.info("Creating random access patterns for json:\n" +jsonMap
 				+"\n in dir:"+directory+" with ending "+ending);
 		TraversalDescription traversalDescription = 
-				TraversalDescriptionBuilder.buildFromJsonMap(jsonMap);
+				TraversalDescriptionBuilder.buildFromJsonMapForAP(jsonMap);
 		
 		Set<Integer> randomIDSet = createRandomIDs();
 		int i = 0;
@@ -160,7 +163,7 @@ public class MainAccessPattern {
 		return set.size() > 10_000;
 	}
 
-	private static void writeJsonToFile(Map<String, Object> jsonMap,
+	protected static void writeJsonToFile(Map<String, Object> jsonMap,
 			String directory, String ending, Integer randomID)
 			throws IOException, Exception {
 		jsonMap.put(JsonKeyConstants.START_NODE, randomID);
@@ -190,7 +193,7 @@ public class MainAccessPattern {
 	}
 
 	private static SortedSet<Long> collectConnectedNodeIDsOfStartNodeID(
-			Integer startNodeID, TraversalDescription traversalDescription) 
+			Integer startNodeID, TraversalDescription traversalDescription) throws Exception 
 	{
 		Node startNode 		= db.getNodeById(startNodeID);
 		SortedSet<Long> set = putNodeIDsInPathIntoSet(traversalDescription, startNode);
@@ -198,17 +201,32 @@ public class MainAccessPattern {
 	}
 	
 	private static SortedSet<Long> putNodeIDsInPathIntoSet(
-			TraversalDescription traversalDescription, Node startNode) 
+			TraversalDescription traversalDescription, Node startNode) throws Exception 
 	{
 		SortedSet<Long> set = new TreeSet<>(); 
-		int i = 0;
-		for (Path path : traversalDescription.traverse(startNode)) {
-			for (Node node : path.nodes()) {
-				set.add(node.getId());
+		Transaction tx = db.beginTx();
+		try {
+			for (Path path : traversalDescription.traverse(startNode)) {
+				for (Node node : path.nodes()) {
+					set.add(node.getId());
+				}
+				
+//				for(Relationship rel : path.relationships()){
+//					int weight = (int) rel.getProperty("weight", 0);
+//					rel.setProperty("weight", weight + EDGE_WEIGHT);
+//				}
+				
+				logger.debug(path.toString());
 			}
-			i++;
+			
+			tx.success();
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new Exception(e.toString());
+		} finally {
+			tx.finish();
 		}
-		logger.debug("nei count for {}={}", startNode.getId(), i);
+		logger.debug("nei count for {}={}", startNode.getId(), set.size());
 		return set;
 	}
 	
@@ -257,14 +275,15 @@ public class MainAccessPattern {
 		return hashCode;
 	}
 
-	private static Set<Integer> createRandomIDs() {
+	protected static Set<Integer> createRandomIDs() {
 		Random random = new Random();
 		//1850065ten kucuk 100K random sayi uret
-		Set<Integer> randomIDs = new HashSet<>(RANDOM_ACCESS_COUNT);
+		Set<Integer> randomIDs = new HashSet<>();
 		for (int i = 0; i < RANDOM_ACCESS_COUNT; i++) {
 			int randomID = random.nextInt(MAX_NODE_COUNT) + 1;
 			randomIDs.add(randomID);
 		}
+//		randomIDs.add(1519527);
 		return randomIDs;
 	}
 	

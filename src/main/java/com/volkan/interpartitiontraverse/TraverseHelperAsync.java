@@ -17,7 +17,7 @@ import com.volkan.db.H2Helper;
 
 public class TraverseHelperAsync extends AbstractTraverseHelper {
 
-	private final StringLogger neo4jLogger = StringLogger.logger(Utility.buildLogFileName());
+//	private final StringLogger neo4jLogger = StringLogger.logger(Utility.buildLogFileName());
 	private final H2Helper h2Helper;
 	
 	public TraverseHelperAsync(H2Helper h2Helper) throws ClassNotFoundException, SQLException {
@@ -76,12 +76,12 @@ public class TraverseHelperAsync extends AbstractTraverseHelper {
 		
 		long jobID = (int) jsonMap.get(JsonKeyConstants.JOB_ID);
 		try {
-			neo4jLogger.logMessage("updateDBWithResults is called. resultString.length=" 
-									+ resultString.length(), true);
+//			neo4jLogger.logMessage("updateDBWithResults is called. resultString.length=" 
+//									+ resultString.length(), true);
 			h2Helper.updateJobWithResults(jobID, resultString);
 		} catch (SQLException e) {
 			e.printStackTrace();
-			neo4jLogger.logMessage(e.toString(), true);
+//			neo4jLogger.logMessage(e.toString(), true);
 			realResults.clear();
 			realResults.add(e.toString());
 		}
@@ -120,7 +120,7 @@ public class TraverseHelperAsync extends AbstractTraverseHelper {
 			delegateQueryOverRestAsync(port, jsonMapClone);
 		} catch (SQLException e) {
 			e.printStackTrace();
-			neo4jLogger.logMessage(e.toString());
+//			neo4jLogger.logMessage(e.toString());
 		}
 	}
 

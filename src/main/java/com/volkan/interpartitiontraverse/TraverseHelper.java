@@ -15,7 +15,7 @@ import com.volkan.Utility;
 
 public class TraverseHelper extends AbstractTraverseHelper{
 	
-	private final StringLogger logger = StringLogger.logger(Utility.buildLogFileName());
+//	private final StringLogger logger = StringLogger.logger(Utility.buildLogFileName());
 	
 	public List<String> traverse(GraphDatabaseService db, Map<String, Object> jsonMap) {
 		List<String> realResults = new ArrayList<String>();
@@ -28,7 +28,7 @@ public class TraverseHelper extends AbstractTraverseHelper{
 
 		int toDepth = (Integer) jsonMap.get(JsonKeyConstants.DEPTH);
 		for (Path path : traversalDes.traverse(startNode)) {
-			logger.logMessage(path.toString() + " # " + path.length(), true);
+//			logger.logMessage(path.toString() + " # " + path.length(), true);
 			Node endNode = path.endNode();
 			if (didShadowComeInUnfinishedPath(toDepth, path, endNode)) {
 				List<String> delegatedResults = delegateQueryToAnotherNeo4j(path, jsonMap);

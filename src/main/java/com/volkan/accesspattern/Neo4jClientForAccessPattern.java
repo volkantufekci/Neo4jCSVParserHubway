@@ -11,13 +11,45 @@ import java.util.Map;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Neo4jClientForAccessPattern {
 
+	private final static Logger logger = LoggerFactory.getLogger(Neo4jClientForAccessPattern.class);
 	private Map<Long, Long> nodeIDGidMap;
 	
 	public Neo4jClientForAccessPattern() {
 		nodeIDGidMap = new HashMap<>();
+	}
+	
+	protected Map<Long, List<EdgeWithWeight>>  collectNodeIDWeightedEdgeArrayMap( GraphDatabaseService dbAP, 
+			int maxNodeCount ) throws IOException 
+	{
+		logger.info("collectNodeIDWeightedEdgeArrayMap started");
+		Map<Long, List<EdgeWithWeight>> nodeIDEdgeArrayMap = new HashMap<>();
+
+		for (long i = 1; i <= maxNodeCount; i++) {
+			Node node = dbAP.getNodeById(i);
+//			putToNodeIDGidMap(i, node);
+
+//			List<Long> neiIDs = new ArrayList<>();
+			List<EdgeWithWeight> edges = new ArrayList<>();
+			for (Relationship rel : node.getRelationships()) {
+//				Node otherNode = rel.getOtherNode(node);
+//				neiIDs.add(otherNode.getId());
+				
+				EdgeWithWeight edge = new EdgeWithWeight();
+				edge.otherNodeID = rel.getOtherNode(node).getId();
+				edge.weight = (int) rel.getProperty("weight", 1);
+				edges.add(edge);
+			}
+			
+//			nodeIDNeiIDArrayMap.put(node.getId(), neiIDs);
+			nodeIDEdgeArrayMap.put(node.getId(), edges);
+		}
+				
+		return nodeIDEdgeArrayMap;
 	}
 	
 	protected Map<Long, List<Long>> collectNodeIDNeiIDsMap( GraphDatabaseService dbAP, 

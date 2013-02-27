@@ -21,6 +21,17 @@ public class TraversalDescriptionBuilder {
 		builder.addUniqueness();
 		return builder.build();
 	}
+	
+	public static TraversalDescription buildFromJsonMapForAP(Map<String, Object> jsonMap) {
+		TraversalDescriptionBuilder builder = new TraversalDescriptionBuilder();
+		int depth = (Integer) jsonMap.get(JsonKeyConstants.DEPTH);
+		builder.traversalDescription = 
+				builder.traversalDescription.evaluator(Evaluators.atDepth(depth));
+		builder.addRelationships(jsonMap);
+		builder.addShadowEvaluator();
+		builder.addUniqueness();
+		return builder.build();
+	}
 
 	private TraversalDescriptionBuilder() {
 		traversalDescription = Traversal.description();

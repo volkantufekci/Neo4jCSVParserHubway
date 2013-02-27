@@ -12,10 +12,15 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.volkan.Configuration;
 
 public class GPartPartitioner {
 
+	private final static Logger logger = LoggerFactory.getLogger(GPartPartitioner.class);
+	
 	public static void buildGrfFile(Map<Long, List<Long>> nodeIDNeiIDArrayMap) throws IOException{
 		String content = generateGrfFileContent(nodeIDNeiIDArrayMap);
 		writeGrfFile(content);
@@ -66,9 +71,21 @@ public class GPartPartitioner {
 		partitionCount -= 1;//We are saving last 1 partition for unmapped gids.
 		
 		//SCOTCH
-		Process pr = Runtime.getRuntime().exec("gpart " + partitionCount + " " 
+		partition(partitionCount);
+
+		ConcurrentHashMap<Long, Integer> gidPartitionMap = readGpartResult(nodeIDGidMap);
+		System.out.println(gidPartitionMap.size() + "");
+		mapNotAccessedNodesToLastPartition(gidPartitionMap, maxNodeCount, lastPartition);
+		writeGidPartitionMapForRuby(gidPartitionMap);
+	}
+
+	protected static void partition(int partitionCount) throws IOException,
+			InterruptedException {
+		String gpartCmd = "gpart " + partitionCount + " " 
 				+ Configuration.GPART_GRF_PATH + " " + Configuration.GPART_RESULT_PATH
-				+ " -b0.05 -vmst");
+				+ " -b0.05 -vmst";
+		logger.info(gpartCmd);
+		Process pr = Runtime.getRuntime().exec(gpartCmd);
 		pr.waitFor();
 		BufferedReader buf = new BufferedReader(new InputStreamReader(pr.getInputStream()));
 
@@ -77,11 +94,6 @@ public class GPartPartitioner {
 		{
 		  System.out.println(line);
 		}
-
-		ConcurrentHashMap<Long, Integer> gidPartitionMap = readGpartResult(nodeIDGidMap);
-		System.out.println(gidPartitionMap.size() + "");
-		mapNotAccessedNodesToLastPartition(gidPartitionMap, maxNodeCount, lastPartition);
-		writeGidPartitionMapForRuby(gidPartitionMap);
 	}
 	
 	protected static ConcurrentHashMap<Long, Integer> readGpartResult(Map<Long, Long> nodeIDGidMap) 
@@ -133,12 +145,5 @@ public class GPartPartitioner {
 		if (gpartInputFile != null)
 			gpartInputFile.close();
 	}
-	
-//	public static void injectPorts(Map<Long, Integer> gidPartitionMap, int maxNodeCount) {
-//		for (Long gid : gidPartitionMap.keySet()) {
-//			int partition = gidPartitionMap.get(gid);
-//			gidPartitionMap.put(gid, partition + 6474); //0 => 6474, 1 => 6475...
-//		}
-//	}
 	
 }
