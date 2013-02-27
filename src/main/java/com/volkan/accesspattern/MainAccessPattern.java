@@ -36,33 +36,34 @@ public class MainAccessPattern {
 
 	private static final Logger logger = LoggerFactory.getLogger(MainAccessPattern.class);
 	
-	private static int RANDOM_ACCESS_COUNT;
-	protected static final int MAX_NODE_COUNT 	 = 1850065;
-	private static int PARTITION_COUNT;
-	private static final int LAST_PARTITION		 = 6483;
-	private static int maxNodeCountInDBAP 		 = 0;
+	protected int RANDOM_ACCESS_COUNT;
+	protected  final int MAX_NODE_COUNT 	 = 1850065;
+	protected  int PARTITION_COUNT;
+	private  final int LAST_PARTITION		 = 6483;
+	private  int maxNodeCountInDBAP 		 = 0;
 
-	private static String DB_PATH;
-	protected static GraphDatabaseService db;
+	protected  String DB_PATH;
+	protected GraphDatabaseService db;
 
-	private static GraphDatabaseService dbAP;
-	private static final String refKeyName = "hashCode";
-	private static final String refIndexName = "refNodes";
+	private GraphDatabaseService dbAP;
+	private  final String refKeyName = "hashCode";
+	private  final String refIndexName = "refNodes";
 	
-	private static final String allRefIndexName = "allRefNodes";
-	private static final String allNormalNodeIndexName = "allNormalNodes";
+	private  final String allRefIndexName = "allRefNodes";
+	private  final String allNormalNodeIndexName = "allNormalNodes";
 	
-	private static final String nodeKeyName = "gid";
-	private static final String normalNodeIndexName = "nodes";
+	private  final String nodeKeyName = "gid";
+	private  final String normalNodeIndexName = "nodes";
 
-	private static Index<Node> allRefIndex;
-	private static Index<Node> refNodeIndex;
-	private static Index<Node> allNormalNodeIndex;
-	private static Index<Node> normalNodeIndex;
+	private  Index<Node> allRefIndex;
+	private  Index<Node> refNodeIndex;
+	private  Index<Node> allNormalNodeIndex;
+	private  Index<Node> normalNodeIndex;
 	
 	private static Set<String> cache = new HashSet<>();
 	
-	protected static void prepareConstants() {
+	
+	public MainAccessPattern() {
 		DB_PATH = Utility.getValueOfProperty("erdosTekParcaDB_PATH", 
 				"/erdos8474notindexed.201301151430.graph.db/");
 		RANDOM_ACCESS_COUNT = Integer.parseInt(Utility.getValueOfProperty("RANDOM_ACCESS_COUNT", "0"));
@@ -70,8 +71,11 @@ public class MainAccessPattern {
 	}
 	
 	public static void main(String[] args) throws Exception {
-		prepareConstants();
-		
+		MainAccessPattern mainAccessPattern = new MainAccessPattern();
+		mainAccessPattern.work();
+	}
+
+	public void work() throws Exception{
 		Runtime.getRuntime().exec("rm -rf "+Configuration.DB_AP_PATH);
 		Thread.sleep(5000);
 		db = new GraphDatabaseFactory().newEmbeddedDatabase(DB_PATH);
@@ -127,15 +131,15 @@ public class MainAccessPattern {
 		
 //		operateGparting();
 	}
-
-	protected static void createJsonOutputDir(String jsonsOutputDir) {
+	
+	protected void createJsonOutputDir(String jsonsOutputDir) {
 		logger.info(jsonsOutputDir+" is created if not existing");
 		File f = new File(jsonsOutputDir);
 		f.mkdirs();
 		FileHelper.deleteFilesUnderFile(f);
 	}
 
-	private static void createRandomAccessPatterns(
+	private void createRandomAccessPatterns(
 			Map<String, Object> jsonMap, String directory, String ending) throws Exception 
 	{
 		logger.info("Creating random access patterns for json:\n" +jsonMap
@@ -165,11 +169,11 @@ public class MainAccessPattern {
 		}
 	}
 
-	private static boolean nodeSetSizeIsTooBigForTests(SortedSet<Long> set) {
+	private boolean nodeSetSizeIsTooBigForTests(SortedSet<Long> set) {
 		return set.size() > 10_000;
 	}
 
-	protected static void writeJsonToFile(Map<String, Object> jsonMap,
+	protected void writeJsonToFile(Map<String, Object> jsonMap,
 			String directory, String ending, Integer randomID)
 			throws IOException, Exception {
 		jsonMap.put(JsonKeyConstants.START_NODE, randomID);
@@ -178,7 +182,7 @@ public class MainAccessPattern {
 				directory+"/"+randomID+ending);
 	}
 
-	private static void createNodesInDBAP(
+	private  void createNodesInDBAP(
 			Integer randomID, SortedSet<Long> set, String hashCode) throws Exception 
 	{
 		Transaction tx = dbAP.beginTx();
@@ -198,15 +202,16 @@ public class MainAccessPattern {
 		}
 	}
 
-	private static SortedSet<Long> collectConnectedNodeIDsOfStartNodeID(
+	private SortedSet<Long> collectConnectedNodeIDsOfStartNodeID(
 			Integer startNodeID, TraversalDescription traversalDescription) throws Exception 
 	{
+		logger.info("collectConnectedNodeIDsOfStartNodeID started");
 		Node startNode 		= db.getNodeById(startNodeID);
 		SortedSet<Long> set = putNodeIDsInPathIntoSet(traversalDescription, startNode);
 		return set;
 	}
 	
-	private static SortedSet<Long> putNodeIDsInPathIntoSet(
+	private SortedSet<Long> putNodeIDsInPathIntoSet(
 			TraversalDescription traversalDescription, Node startNode) throws Exception 
 	{
 		SortedSet<Long> set = new TreeSet<>(); 
@@ -236,7 +241,7 @@ public class MainAccessPattern {
 		return set;
 	}
 	
-	private static Node createRefNodeAndAddToIndex(String hashCode, int randomID) {
+	private Node createRefNodeAndAddToIndex(String hashCode, int randomID) {
 		maxNodeCountInDBAP++;
 		Node refNode;
 		refNode = dbAP.createNode();
@@ -248,7 +253,7 @@ public class MainAccessPattern {
 		return refNode;
 	}
 	
-	private static void createNodesInPathIfNeededAndConnectToRefNode(
+	private void createNodesInPathIfNeededAndConnectToRefNode(
 			SortedSet<Long> set, Node refNode) 
 	{
 		for (Long id : set) {
@@ -261,7 +266,7 @@ public class MainAccessPattern {
 		}
 	}
 
-	private static Node createNormalNodeAndAddToIndex(String propertyValue) {
+	private Node createNormalNodeAndAddToIndex(String propertyValue) {
 		maxNodeCountInDBAP++;
 		Node node;
 		node = dbAP.createNode();
@@ -271,7 +276,7 @@ public class MainAccessPattern {
 		return node;
 	}
 
-	private static String generateHashCodeOfNodeIDsInPath(SortedSet<Long> set) {
+	private String generateHashCodeOfNodeIDsInPath(SortedSet<Long> set) {
 		StringBuilder sb = new StringBuilder();
 		for (Long id : set) {
 			sb.append(id).append(",");
@@ -281,7 +286,7 @@ public class MainAccessPattern {
 		return hashCode;
 	}
 
-	protected static Set<Integer> createRandomIDs() {
+	protected Set<Integer> createRandomIDs() {
 		Random random = new Random();
 		//1850065ten kucuk 100K random sayi uret
 		Set<Integer> randomIDs = new HashSet<>();
@@ -315,7 +320,7 @@ public class MainAccessPattern {
 	    return factory.getOrCreate( keyName, propertyValue );
 	}
 	
-	public static void writeRandomIDs(List<Integer> randomIDs) throws IOException {
+	public void writeRandomIDs(List<Integer> randomIDs) throws IOException {
 
 		BufferedWriter relFile = 
 				new BufferedWriter(new FileWriter(Configuration.RANDOM_ID_FILE));
@@ -328,7 +333,7 @@ public class MainAccessPattern {
 			relFile.close();
 	}
 	
-	private static void registerShutdownHook() {
+	private void registerShutdownHook() {
 		// Registers a shutdown hook for the Neo4j instance so that it
 		// shuts down nicely when the VM exits (even if you "Ctrl-C" the
 		// running example before it's completed)
@@ -346,7 +351,7 @@ public class MainAccessPattern {
 	    follows
 	}
 	
-	private static void operateGparting() throws IOException, InterruptedException {
+	private void operateGparting() throws IOException, InterruptedException {
 		Neo4jClientForAccessPattern neo4jClient = new Neo4jClientForAccessPattern();
 		Map<Long, List<Long>> nodeIDNeiIDArrayMap = 
 								neo4jClient.collectNodeIDNeiIDsMap(dbAP, maxNodeCountInDBAP);

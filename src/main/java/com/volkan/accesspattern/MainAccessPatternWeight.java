@@ -16,7 +16,6 @@ import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.volkan.Utility;
 import com.volkan.interpartitiontraverse.JsonHelper;
 import com.volkan.interpartitiontraverse.TraversalDescriptionBuilder;
 
@@ -24,19 +23,20 @@ public class MainAccessPatternWeight extends MainAccessPattern {
 
 	private static final Logger logger = LoggerFactory.getLogger(MainAccessPatternWeight.class);
 
-	private static final int EDGE_WEIGHT = 5;
-	private static int PARTITION_COUNT;
-//	private static final String DB_PATH = System.getProperty("user.home") +  
-//			"/Development/tez/Neo4jSurumleri/neo4j-community-1.8.M07erdos/data/graph.db/";
-//			"/erdos8474notindexed.201301151430.graph.db/";
-	private static String DB_PATH;
+	private final int EDGE_WEIGHT = 5;
 	
-	protected static GraphDatabaseService db;
+	protected GraphDatabaseService db;
 
 	public static void main(String[] args) throws Exception {
-		DB_PATH = Utility.getValueOfProperty("erdosTekParcaDB_PATH", 
-				"/erdos8474notindexed.201301151430.graph.db/");
-		PARTITION_COUNT = Integer.parseInt(Utility.getValueOfProperty("PARTITION_COUNT", "0"));
+		MainAccessPatternWeight mainAccessPatternWeight = new MainAccessPatternWeight();
+		mainAccessPatternWeight.work();
+	}
+	
+	public MainAccessPatternWeight() {
+		super();
+	}
+
+	public void work() throws Exception {
 		db = new GraphDatabaseFactory().newEmbeddedDatabase(DB_PATH);
 		registerShutdownHook();
 		
@@ -51,8 +51,7 @@ public class MainAccessPatternWeight extends MainAccessPattern {
 		createRandomAccessPatterns(jsonMap, jsonsOutputDir, ending);
 		operateGparting();
 	}
-	
-	private static void createRandomAccessPatterns(
+	private void createRandomAccessPatterns(
 			Map<String, Object> jsonMap, String directory, String ending) throws Exception 
 	{
 		logger.info("Creating random access patterns for json:\n" +jsonMap
@@ -71,9 +70,10 @@ public class MainAccessPatternWeight extends MainAccessPattern {
 		}
 	}
 	
-	private static void increaseTraversedEdgesWeight(TraversalDescription td, Node startNode) 
+	private void increaseTraversedEdgesWeight(TraversalDescription td, Node startNode) 
 			throws Exception 
 	{
+		logger.info("increaseTraversedEdgesWeight started");
 		Transaction tx = db.beginTx();
 		try {
 			for (Path path : td.traverse(startNode)) {
@@ -92,7 +92,7 @@ public class MainAccessPatternWeight extends MainAccessPattern {
 		}
 	}
 	
-	private static void operateGparting() throws IOException, InterruptedException {
+	private void operateGparting() throws IOException, InterruptedException {
 		Neo4jClientForAccessPattern neo4jClient = new Neo4jClientForAccessPattern();
 		Map<Long, List<EdgeWithWeight>> nodeIDNeiIDArrayMap = 
 					neo4jClient.collectNodeIDWeightedEdgeArrayMap(db, MAX_NODE_COUNT);
@@ -101,7 +101,7 @@ public class MainAccessPatternWeight extends MainAccessPattern {
 		GPartPartitionerWeighted.performGpartingAndWriteGidPartitionMap(PARTITION_COUNT);
 	}
 
-	private static void registerShutdownHook() {
+	private void registerShutdownHook() {
 		// Registers a shutdown hook for the Neo4j instance so that it
 		// shuts down nicely when the VM exits (even if you "Ctrl-C" the
 		// running example before it's completed)
