@@ -16,7 +16,6 @@ import java.util.TreeSet;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Path;
-import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
@@ -27,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.volkan.Configuration;
+import com.volkan.Utility;
 import com.volkan.helpers.FileHelper;
 import com.volkan.interpartitiontraverse.JsonHelper;
 import com.volkan.interpartitiontraverse.JsonKeyConstants;
@@ -36,9 +36,9 @@ public class MainAccessPattern {
 
 	private static final Logger logger = LoggerFactory.getLogger(MainAccessPattern.class);
 	
-	private static final int RANDOM_ACCESS_COUNT = 3;
+	private static int RANDOM_ACCESS_COUNT;
 	protected static final int MAX_NODE_COUNT 	 = 1850065;
-	protected static final int PARTITION_COUNT 	 = 3;
+	protected static int PARTITION_COUNT;
 	private static final int LAST_PARTITION		 = 6483;
 	private static int maxNodeCountInDBAP 		 = 0;
 
@@ -66,6 +66,9 @@ public class MainAccessPattern {
 	
 	
 	public static void main(String[] args) throws Exception {
+		RANDOM_ACCESS_COUNT = Integer.parseInt(Utility.getValueOfProperty("RANDOM_ACCESS_COUNT", "0"));
+		PARTITION_COUNT = Integer.parseInt(Utility.getValueOfProperty("PARTITION_COUNT", "0"));
+		
 		Runtime.getRuntime().exec("rm -rf "+Configuration.DB_AP_PATH);
 		Thread.sleep(5000);
 		db = new GraphDatabaseFactory().newEmbeddedDatabase(DB_PATH);
