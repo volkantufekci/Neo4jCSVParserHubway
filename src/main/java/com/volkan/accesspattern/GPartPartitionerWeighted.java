@@ -17,7 +17,7 @@ public class GPartPartitionerWeighted extends GPartPartitioner {
 
 	private final static Logger logger = LoggerFactory.getLogger(GPartPartitionerWeighted.class);
 	
-	public static void buildGrfFile(Map<Long, List<EdgeWithWeight>> nodeIDEdgeArrayMap) 
+	public static void buildWeightedGrfFile(Map<Long, List<EdgeWithWeight>> nodeIDEdgeArrayMap) 
 			throws IOException
 	{
 		String content = generateGrfFileContent(nodeIDEdgeArrayMap);

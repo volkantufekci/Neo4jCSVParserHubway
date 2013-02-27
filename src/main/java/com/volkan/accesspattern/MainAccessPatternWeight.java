@@ -95,7 +95,7 @@ public class MainAccessPatternWeight extends MainAccessPattern {
 		Map<Long, List<EdgeWithWeight>> nodeIDNeiIDArrayMap = 
 					neo4jClient.collectNodeIDWeightedEdgeArrayMap(db, MAX_NODE_COUNT);
 		
-		GPartPartitionerWeighted.buildGrfFile(nodeIDNeiIDArrayMap);
+		GPartPartitionerWeighted.buildWeightedGrfFile(nodeIDNeiIDArrayMap);
 		GPartPartitionerWeighted.performGpartingAndWriteGidPartitionMap(PARTITION_COUNT);
 	}
 
