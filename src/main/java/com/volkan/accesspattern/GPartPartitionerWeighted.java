@@ -20,11 +20,11 @@ public class GPartPartitionerWeighted extends GPartPartitioner {
 	public static void buildWeightedGrfFile(Map<Long, List<EdgeWithWeight>> nodeIDEdgeArrayMap) 
 			throws IOException
 	{
-		String content = generateGrfFileContent(nodeIDEdgeArrayMap);
+		String content = generateWeightedGrfFileContent(nodeIDEdgeArrayMap);
 		writeGrfFile(content);
 	}
 	
-	protected static String generateGrfFileContent(Map<Long, List<EdgeWithWeight>> nodeIDEdgeArrayMap){
+	protected static String generateWeightedGrfFileContent(Map<Long, List<EdgeWithWeight>> nodeIDEdgeArrayMap){
 		
 		StringBuilder sb = new StringBuilder();
 		int nodeCount = 0;
