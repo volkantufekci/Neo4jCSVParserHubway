@@ -16,7 +16,6 @@ import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.volkan.Utility;
 import com.volkan.interpartitiontraverse.JsonHelper;
 import com.volkan.interpartitiontraverse.TraversalDescriptionBuilder;
 
@@ -33,8 +32,7 @@ public class MainAccessPatternWeight extends MainAccessPattern {
 	protected static GraphDatabaseService db;
 
 	public static void main(String[] args) throws Exception {
-		DB_PATH = Utility.getValueOfProperty("erdosTekParcaDB_PATH", 
-				"/erdos8474notindexed.201301151430.graph.db/");
+		prepareConstants();
 		db = new GraphDatabaseFactory().newEmbeddedDatabase(DB_PATH);
 		registerShutdownHook();
 		

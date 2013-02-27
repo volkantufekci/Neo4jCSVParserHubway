@@ -42,9 +42,7 @@ public class MainAccessPattern {
 	private static final int LAST_PARTITION		 = 6483;
 	private static int maxNodeCountInDBAP 		 = 0;
 
-	private static final String DB_PATH = System.getProperty("user.home") +  
-			"/Development/tez/Neo4jSurumleri/neo4j-community-1.8.M07erdos/data/graph.db/";
-//			"/erdos8474notindexed.201301151430.graph.db/";
+	private static String DB_PATH;
 	protected static GraphDatabaseService db;
 
 	private static GraphDatabaseService dbAP;
@@ -64,10 +62,15 @@ public class MainAccessPattern {
 	
 	private static Set<String> cache = new HashSet<>();
 	
-	
-	public static void main(String[] args) throws Exception {
+	protected static void prepareConstants() {
+		DB_PATH = Utility.getValueOfProperty("erdosTekParcaDB_PATH", 
+				"/erdos8474notindexed.201301151430.graph.db/");
 		RANDOM_ACCESS_COUNT = Integer.parseInt(Utility.getValueOfProperty("RANDOM_ACCESS_COUNT", "0"));
 		PARTITION_COUNT = Integer.parseInt(Utility.getValueOfProperty("PARTITION_COUNT", "0"));
+	}
+	
+	public static void main(String[] args) throws Exception {
+		prepareConstants();
 		
 		Runtime.getRuntime().exec("rm -rf "+Configuration.DB_AP_PATH);
 		Thread.sleep(5000);
