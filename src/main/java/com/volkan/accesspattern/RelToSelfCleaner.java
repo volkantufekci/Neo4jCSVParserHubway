@@ -11,14 +11,17 @@ import org.neo4j.graphdb.traversal.Evaluators;
 import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.neo4j.kernel.Traversal;
 
+import com.volkan.Utility;
+
 public class RelToSelfCleaner {
 
-	private static final String DB_PATH = System.getProperty("user.home") +  
-			"/Development/tez/Neo4jSurumleri/neo4j-community-1.8.M07erdos/data/graph.db/";
+	private static String DB_PATH;
 	private static GraphDatabaseService db;
 	private static final int MAX_NODE_COUNT 	 = 1850065;
 	
 	public static void main(String[] args) {
+		DB_PATH = Utility.getValueOfProperty("erdosTekParcaDB_PATH", 
+				"/erdos8474notindexed.201301151430.graph.db/");
 		db = new GraphDatabaseFactory().newEmbeddedDatabase(DB_PATH);
 		registerShutdownHook();
 		
