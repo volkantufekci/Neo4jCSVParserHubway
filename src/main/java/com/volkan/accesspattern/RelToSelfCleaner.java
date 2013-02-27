@@ -10,11 +10,15 @@ import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 import org.neo4j.graphdb.traversal.Evaluators;
 import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.neo4j.kernel.Traversal;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.volkan.Utility;
 
 public class RelToSelfCleaner {
 
+	private static final Logger logger = LoggerFactory.getLogger(RelToSelfCleaner.class);
+	
 	private static String DB_PATH;
 	private static GraphDatabaseService db;
 	private static final int MAX_NODE_COUNT 	 = 1850065;
@@ -24,6 +28,7 @@ public class RelToSelfCleaner {
 				"/erdos8474notindexed.201301151430.graph.db/");
 		db = new GraphDatabaseFactory().newEmbeddedDatabase(DB_PATH);
 		registerShutdownHook();
+		logger.info("RelToSelfCleaner is cleaning reference nodes for db in path:"+DB_PATH);
 		
 		TraversalDescription td = Traversal.description();
 		td = td.relationships(DynamicRelationshipType.withName("follows"), Direction.BOTH);
