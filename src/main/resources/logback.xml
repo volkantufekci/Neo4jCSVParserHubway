@@ -7,8 +7,8 @@
 	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
 		<layout class="ch.qos.logback.classic.PatternLayout">
 			<pattern>
-<!-- 				%d{HH:mm:ss.SSS} [%thread] %-5level %logger{32} - %msg%n -->
-				%d{HH:mm:ss.SSS} - %msg%n
+ 				%d{HH:mm:ss.SSS} [%thread] %-5level %logger{32} - %msg%n 
+<!--				%d{HH:mm:ss.SSS} - %msg%n -->
 			</pattern>
 		</layout>
 	</appender>
@@ -40,7 +40,7 @@
 	</appender> -->
 
 	<root>
-		<level value="DEBUG" />
+		<level value="INFO" />
 		<appender-ref ref="STDOUT" />
 		<appender-ref ref="FILE" />
 	</root>
