@@ -84,6 +84,7 @@ public class MainAccessPatternWeight extends MainAccessPattern {
 		if (fileNames.isEmpty()) {
 			logger.error(directory+" does not exist or no json file exists");
 		} else {
+			int i = 0;
 			for (String fileName : fileNames) {
 				Map<String, Object> jsonMap = JsonHelper.readJsonFileIntoMap(fileName);
 				Integer startNodeID = (Integer) jsonMap.get(JsonKeyConstants.START_NODE);
@@ -95,6 +96,7 @@ public class MainAccessPatternWeight extends MainAccessPattern {
 				
 				Node startNode 		= db.getNodeById(startNodeID);
 				increaseTraversedEdgesWeight(traversalDescription, startNode);
+				logger.info("{} edges weight increased", ++i);
 			}
 		}
 	}
@@ -114,7 +116,7 @@ public class MainAccessPatternWeight extends MainAccessPattern {
 			increaseTraversedEdgesWeight(traversalDescription, startNode);
 			
 			writeJsonToFile(jsonMap, directory, ending, randomID);
-			logger.info("{} edge weight increased", ++i);
+			logger.info("{} edges weight increased", ++i);
 		}
 	}
 	
