@@ -43,9 +43,8 @@ public class MainAccessPattern {
 	private  int maxNodeCountInDBAP 		 = 0;
 
 	protected  String DB_PATH;
-	protected GraphDatabaseService db;
+	protected GraphDatabaseService db, dbAP;
 
-	private GraphDatabaseService dbAP;
 	private  final String refKeyName = "hashCode";
 	private  final String refIndexName = "refNodes";
 	
@@ -202,7 +201,7 @@ public class MainAccessPattern {
 		}
 	}
 
-	private SortedSet<Long> collectConnectedNodeIDsOfStartNodeID(
+	protected SortedSet<Long> collectConnectedNodeIDsOfStartNodeID(
 			Integer startNodeID, TraversalDescription traversalDescription) throws Exception 
 	{
 		logger.info("collectConnectedNodeIDsOfStartNodeID started");
@@ -215,27 +214,11 @@ public class MainAccessPattern {
 			TraversalDescription traversalDescription, Node startNode) throws Exception 
 	{
 		SortedSet<Long> set = new TreeSet<>(); 
-		Transaction tx = db.beginTx();
-		try {
-			for (Path path : traversalDescription.traverse(startNode)) {
-				for (Node node : path.nodes()) {
-					set.add(node.getId());
-				}
-				
-//				for(Relationship rel : path.relationships()){
-//					int weight = (int) rel.getProperty("weight", 0);
-//					rel.setProperty("weight", weight + EDGE_WEIGHT);
-//				}
-				
-				logger.debug(path.toString());
+		for (Path path : traversalDescription.traverse(startNode)) {
+			for (Node node : path.nodes()) {
+				set.add(node.getId());
 			}
-			
-			tx.success();
-		} catch (Exception e) {
-			e.printStackTrace();
-			throw new Exception(e.toString());
-		} finally {
-			tx.finish();
+			logger.debug(path.toString());
 		}
 		logger.debug("nei count for {}={}", startNode.getId(), set.size());
 		return set;
@@ -276,7 +259,7 @@ public class MainAccessPattern {
 		return node;
 	}
 
-	private String generateHashCodeOfNodeIDsInPath(SortedSet<Long> set) {
+	protected String generateHashCodeOfNodeIDsInPath(SortedSet<Long> set) {
 		StringBuilder sb = new StringBuilder();
 		for (Long id : set) {
 			sb.append(id).append(",");
