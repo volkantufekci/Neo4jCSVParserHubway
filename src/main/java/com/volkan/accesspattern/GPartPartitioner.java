@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.volkan.Configuration;
+import com.volkan.Utility;
 
 public class GPartPartitioner {
 
@@ -81,9 +82,11 @@ public class GPartPartitioner {
 
 	protected static void partition(int partitionCount) throws IOException,
 			InterruptedException {
+		//-b ratio which should be between 0 and 1
+		String brat = Utility.getValueOfProperty("brat", "-b0.9");
 		String gpartCmd = "gpart " + partitionCount + " " 
 				+ Configuration.GPART_GRF_PATH + " " + Configuration.GPART_RESULT_PATH
-				+ " -b0.05 -vmst";
+				+ " "+brat+" -vmst";
 		logger.info(gpartCmd);
 		Process pr = Runtime.getRuntime().exec(gpartCmd);
 		pr.waitFor();
