@@ -42,4 +42,4 @@ randomIDs
 relsVOS.txt
 relsVOSUfak.txt
 
-src/main/resources/jsons/erdos/
+#src/main/resources/jsons/erdos/
