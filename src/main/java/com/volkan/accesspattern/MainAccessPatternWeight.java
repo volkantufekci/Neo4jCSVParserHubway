@@ -89,7 +89,7 @@ public class MainAccessPatternWeight extends MainAccessPattern {
 				Map<String, Object> jsonMap = JsonHelper.readJsonFileIntoMap(fileName);
 				Integer startNodeID = (Integer) jsonMap.get(JsonKeyConstants.START_NODE);
 			
-				logger.info("Creating random access patterns without existing json:\n" +jsonMap
+				logger.info("Creating random access patterns with existing json:\n" +jsonMap
 						+"\n in dir:"+directory+" with ending "+ending);
 				TraversalDescription traversalDescription = 
 						TraversalDescriptionBuilder.buildFromJsonMapForAP(jsonMap);
