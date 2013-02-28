@@ -16,7 +16,9 @@ import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.volkan.helpers.FileListingVisitor;
 import com.volkan.interpartitiontraverse.JsonHelper;
+import com.volkan.interpartitiontraverse.JsonKeyConstants;
 import com.volkan.interpartitiontraverse.TraversalDescriptionBuilder;
 
 public class MainAccessPatternWeight extends MainAccessPattern {
@@ -47,10 +49,56 @@ public class MainAccessPatternWeight extends MainAccessPattern {
 						Arrays.asList("follows", "follows", "follows"));
 		String jsonsOutputDir 	= "src/main/resources/jsons/erdos/3depth/";
 		String ending		  	= "out_in_out.json";
-		createJsonOutputDir(jsonsOutputDir);
-		createRandomAccessPatterns(jsonMap, jsonsOutputDir, ending);
+		
+		boolean useExistingAccessPatterns = true;
+		createOrUseExistingAPs(
+			jsonMap, jsonsOutputDir, ending, useExistingAccessPatterns);
+		
+//		//2 Depths
+		jsonMap = JsonHelper.createJsonMapWithDirectionsAndRelTypes(
+						Arrays.asList("OUT", "IN"), Arrays.asList("follows", "follows"));
+		jsonsOutputDir = "src/main/resources/jsons/erdos/2depth/";
+		ending		  = "out_in.json";
+		
+		createOrUseExistingAPs(
+			jsonMap, jsonsOutputDir, ending, useExistingAccessPatterns);
+		
 		operateGparting();
 	}
+
+	protected void createOrUseExistingAPs(Map<String, Object> jsonMap,
+			String jsonsOutputDir, String ending,
+			boolean useExistingAccessPatterns) throws Exception {
+		if (useExistingAccessPatterns) {
+			useExistingAccPattsFromJsons(jsonsOutputDir, ending);
+		} else {
+			createJsonOutputDir(jsonsOutputDir);
+			createRandomAccessPatterns(jsonMap, jsonsOutputDir, ending);
+		}
+	}
+	
+	private void useExistingAccPattsFromJsons(String directory, String ending) 
+			throws Exception 
+	{
+		List<String> fileNames = FileListingVisitor.listJsonFileNamesInDir(directory);
+		if (fileNames.isEmpty()) {
+			logger.error(directory+" does not exist or no json file exists");
+		} else {
+			for (String fileName : fileNames) {
+				Map<String, Object> jsonMap = JsonHelper.readJsonFileIntoMap(fileName);
+				Integer startNodeID = (Integer) jsonMap.get(JsonKeyConstants.START_NODE);
+			
+				logger.info("Creating random access patterns without existing json:\n" +jsonMap
+						+"\n in dir:"+directory+" with ending "+ending);
+				TraversalDescription traversalDescription = 
+						TraversalDescriptionBuilder.buildFromJsonMapForAP(jsonMap);
+				
+				Node startNode 		= db.getNodeById(startNodeID);
+				increaseTraversedEdgesWeight(traversalDescription, startNode);
+			}
+		}
+	}
+	
 	private void createRandomAccessPatterns(
 			Map<String, Object> jsonMap, String directory, String ending) throws Exception 
 	{
@@ -66,7 +114,7 @@ public class MainAccessPatternWeight extends MainAccessPattern {
 			increaseTraversedEdgesWeight(traversalDescription, startNode);
 			
 			writeJsonToFile(jsonMap, directory, ending, randomID);
-			logger.debug("{} edge weight increased", ++i);
+			logger.info("{} edge weight increased", ++i);
 		}
 	}
 	
