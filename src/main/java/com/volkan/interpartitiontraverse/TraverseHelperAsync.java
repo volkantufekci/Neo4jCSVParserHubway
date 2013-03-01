@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.neo4j.graphdb.GraphDatabaseService;
@@ -64,7 +65,9 @@ public class TraverseHelperAsync extends AbstractTraverseHelper {
 	 * @param jsonMap
 	 * @return
 	 */
-	private Node getStartNode(GraphDatabaseService db, Map<String, Object> jsonMap) {
+	private Node getStartNode(GraphDatabaseService db, Map<String, Object> jsonMap) 
+			throws Exception
+	{
 		Node startNode;
 		String defaultValue = "BY_INDEX";
 		String nodeFetchStyle = Utility.getValueOfProperty("nodeFetchStyle", defaultValue);
@@ -73,6 +76,11 @@ public class TraverseHelperAsync extends AbstractTraverseHelper {
 		} else {
 			startNode = fetchStartNodeFromIndex(db, jsonMap);
 		}
+		
+		if (startNode == null) {
+			throw new NoSuchElementException(defaultValue+" returned kein Node");
+		}
+		
 		return startNode;
 	}
 
