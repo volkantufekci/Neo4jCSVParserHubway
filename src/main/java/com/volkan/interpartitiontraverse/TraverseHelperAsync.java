@@ -89,7 +89,7 @@ public class TraverseHelperAsync extends AbstractTraverseHelper {
 	{
 		String resultString = convertResultsListToString(realResults);
 		
-		long jobID = (int) jsonMap.get(JsonKeyConstants.JOB_ID);
+		long jobID = (long) jsonMap.get(JsonKeyConstants.JOB_ID);
 //		try {
 		neo4jLogger.logMessage("updateDBWithResults is called. resultString.length=" 
 									+ resultString.length(), true);
@@ -178,7 +178,7 @@ public class TraverseHelperAsync extends AbstractTraverseHelper {
 					} catch (IOException e) {
 						neo4jLogger.logMessage("AAPN is not accessible\n"+e.toString());
 					}
-					long jobID = (int) jsonMapClone.get(JsonKeyConstants.JOB_ID);
+					long jobID =  (long) jsonMapClone.get(JsonKeyConstants.JOB_ID);
 					try {
 						h2Helper.updateJobWithResults(jobID, aapn+" - jobID:" + jobID + " CAKILDI-" +
 								response.getEntity(String.class));
