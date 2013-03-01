@@ -39,4 +39,6 @@ public class Configuration {
 			"/gpartInputFile.grf";
 	public static final String GID_PARTITION_MAP = System.getProperty("user.home") + 
 			"/gid_partition_h";
+	
+	public static final String AAPN = System.getProperty("user.home") + "/AAPN";
 }

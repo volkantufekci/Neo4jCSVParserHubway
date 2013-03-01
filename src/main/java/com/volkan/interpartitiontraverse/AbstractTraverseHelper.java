@@ -7,13 +7,15 @@ import java.util.Map;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Path;
+import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.index.IndexHits;
 import org.neo4j.graphdb.index.IndexManager;
 
 public abstract class AbstractTraverseHelper {
 
-	public abstract List<String> traverse(GraphDatabaseService db, Map<String, Object> jsonMap);
+	public abstract List<String> traverse(GraphDatabaseService db, Map<String, Object> jsonMap) 
+			throws Exception;
 	
 	/**
 	 * A shadow node came across within an unfinished path, 
@@ -49,15 +51,33 @@ public abstract class AbstractTraverseHelper {
 	}
 	
 	protected String appendEndingToFinishedPath( 
-			Map<String, Object> jsonMap, Path path, Node endNode) {
-	
-		return path + " # " 
-				+ endNode.getProperty(PropertyNameConstants.PORT, "NA") + "-"
-				+ endNode.getProperty(PropertyNameConstants.GID) + " # "  
-				+ "Hop count: " 
-				+ jsonMap.get("hops");
-}
+			Map<String, Object> jsonMap, Path path, Node endNode) 
+	{
+		String formattedPathString = formatPathString(path); 
+		return formattedPathString + " # " 
+//				+ endNode.getProperty(PropertyNameConstants.PORT, "NA") + "-"
+//				+ endNode.getProperty(PropertyNameConstants.GID) + " # "  
+				+ " Hop count: " + jsonMap.get("hops");
+	}
 
+	protected String formatPathString(Path path) {
+		StringBuilder sb = new StringBuilder();
+		for (Relationship rel : path.relationships()) {
+			Node startNode = rel.getStartNode();
+			Node endNode   = rel.getEndNode();
+			sb.append(startNode.getProperty(PropertyNameConstants.GID, "NA") + " " +
+					  "("+startNode.getProperty(PropertyNameConstants.PORT, "NA")+"-"+
+					  startNode.getId()+")");
+			sb.append("-"+rel.getType()+"-");
+			sb.append(endNode.getProperty(PropertyNameConstants.GID, "NA") + " " +
+					  "("+endNode.getProperty(PropertyNameConstants.PORT, "NA")+"-"+
+					  endNode.getId()+")");
+			sb.append(" ");
+		}
+		String specializedPathString = sb.toString();
+		return specializedPathString;
+	}
+	
 	protected void increaseHops(Map<String, Object> jsonMap, Map<String, Object> jsonMapClone) {
 		//Indicates how many additional hops performed in order to fulfill the query
 		int hops = 0;

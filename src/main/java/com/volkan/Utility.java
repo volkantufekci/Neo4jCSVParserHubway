@@ -1,6 +1,8 @@
 package com.volkan;
 
+import java.io.BufferedReader;
 import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.Properties;
 
@@ -62,5 +64,11 @@ public class Utility {
 		}
 		return propertyValue;
 	}
-
+	
+	public static String getAutomaticallyAssignedPortNumber() throws IOException {
+		BufferedReader br = new BufferedReader(new FileReader(Configuration.AAPN));
+		String line = br.readLine();
+		br.close();
+		return line;
+	}
 }
