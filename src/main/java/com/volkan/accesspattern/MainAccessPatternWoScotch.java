@@ -119,7 +119,7 @@ public class MainAccessPatternWoScotch extends MainAccessPatternWeight{
 	 * @throws IOException
 	 */
 	private void writeGidPartitionMapForRubyForLastPartition() throws IOException{
-		String fileName = Configuration.GID_PARTITION_MAP;
+		String fileName = Configuration.GID_PARTITION_MAP+"_"+LAST_PARTITION;
 		BufferedWriter gpartInputFile = new BufferedWriter(new FileWriter(fileName));
 		
 		for (long i = 1; i <= MAX_NODE_COUNT; i++) {
