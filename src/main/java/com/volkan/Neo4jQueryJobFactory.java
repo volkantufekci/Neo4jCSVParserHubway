@@ -41,7 +41,6 @@ public class Neo4jQueryJobFactory {
 			@Override
 			public void run() {
 				try {
-//					String port = jsonMap.get(JsonKeyConstants.START_PORT).toString();
 					String port = fetchPortFromRedis(jedisPool, jsonMap);
 					generateJobInDBFromJsonFileName(h2Client, jsonMap);
 					Neo4jClientAsync neo4jClientAsync = new Neo4jClientAsync();
@@ -61,6 +60,40 @@ public class Neo4jQueryJobFactory {
 				jedisPool.returnResource(jedis);
 				return port;
 			}
+		};
+		
+		return r;
+	}
+	
+	public static Runnable buildJobWithGenarateJobForWOScotch(
+			final H2Client h2Client, final Map<String, Object> jsonMap) {
+		
+		Runnable r = new Runnable() {
+			
+			@Override
+			public void run() {
+				try {
+					String port = fetchPortViaModulo();
+					generateJobInDBFromJsonFileName(h2Client, jsonMap);
+					Neo4jClientAsync neo4jClientAsync = new Neo4jClientAsync();
+					neo4jClientAsync.delegateQueryAsync(port, jsonMap);
+					logger.debug("Job submitted to Neo-{}", port);
+					neo4jClientAsync.periodicFetcher((long) jsonMap.get(JsonKeyConstants.PARENT_JOB_ID));
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+				
+			}
+
+			private String fetchPortViaModulo(){
+				int partitionCount = Integer.parseInt(
+						Utility.getValueOfProperty("PARTITION_COUNT", "-1").toString());
+				int startNodeID = 
+						Integer.parseInt(jsonMap.get(JsonKeyConstants.START_NODE).toString());
+				String port = startNodeID % (partitionCount) + 6474 + "";
+				return port;
+			}
+			
 		};
 		
 		return r;

@@ -253,12 +253,36 @@ public class Main {
 		for (int j = 0; j < times; j++) {
 			for(int i=0; i < jobCountPerRound; i++){
 				String jsonFileName = FileListingVisitor.randomJsonFileNameFromDir(rootDir);
-				executeJobForJsonFileName(jsonFileName, executorService, h2Client, jedisPool);
+				if (shouldFetchPortFromRedis()) {
+					executeJobForJsonFileName(jsonFileName, executorService, h2Client, jedisPool);
+				} else {
+					executeJobForJsonFileNameForWOScotch(jsonFileName, executorService, h2Client);
+				}
+				
 			}
 			Thread.sleep(interval * 1000);
 		}
 			
 		executorService.shutdown();
+	}
+	
+	private static boolean shouldFetchPortFromRedis(){
+		boolean result = false;
+		String strategy = Utility.getValueOfProperty("PORT_FETCH_STYLE", "Redis");
+		if (strategy.equalsIgnoreCase("Redis")) {
+			result = true;
+		}
+		return result;
+	}
+
+	private static void executeJobForJsonFileNameForWOScotch(
+			String jsonFileName, ExecutorService scheduler, H2Client h2Client) 
+					throws Exception 
+	{
+		Map<String, Object> jsonMap = JsonHelper.readJsonFileIntoMap(jsonFileName);
+		
+		Runnable r = Neo4jQueryJobFactory.buildJobWithGenarateJobForWOScotch(h2Client, jsonMap);
+		scheduler.execute(r);
 	}
 	
 	private static void executeJobForJsonFileName(
