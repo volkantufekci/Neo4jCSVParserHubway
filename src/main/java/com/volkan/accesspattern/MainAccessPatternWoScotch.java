@@ -61,6 +61,8 @@ public class MainAccessPatternWoScotch extends MainAccessPatternWeight{
 		createOrUseExistingAPs(jsonMap, jsonsOutputDir, ending,
 				useExistingAccessPatterns);
 		writeGidPartitionMapForRuby();
+		
+		writeGidPartitionMapForRubyForLastPartition();
 	}
 	
 	protected void processRandomID(TraversalDescription traversalDescription, 
@@ -81,6 +83,10 @@ public class MainAccessPatternWoScotch extends MainAccessPatternWeight{
 		gids.addAll(nodesInTraversal);
 	}
 	
+	/**
+	 * Write gid_partition_h_X for partitions except LAST_PARTITION
+	 * @throws IOException
+	 */
 	private void writeGidPartitionMapForRuby() throws IOException {
 		for (Integer partition : partitionGidsMap.keySet()) {
 			String fileName = Configuration.GID_PARTITION_MAP + "_" + partition;
@@ -108,4 +114,19 @@ public class MainAccessPatternWoScotch extends MainAccessPatternWeight{
 		}
 	}
 
+	/**
+	 * Writes gid_partition_h_X just for the last partition
+	 * @throws IOException
+	 */
+	private void writeGidPartitionMapForRubyForLastPartition() throws IOException{
+		String fileName = Configuration.GID_PARTITION_MAP;
+		BufferedWriter gpartInputFile = new BufferedWriter(new FileWriter(fileName));
+		
+		for (long i = 1; i <= MAX_NODE_COUNT; i++) {
+			gpartInputFile.write(i+","+LAST_PARTITION+"\n");
+		}
+		
+		if (gpartInputFile != null)
+			gpartInputFile.close();
+	}
 }
