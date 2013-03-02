@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Path;
 import org.neo4j.graphdb.Relationship;
@@ -27,7 +26,7 @@ public class MainAccessPatternWeight extends MainAccessPattern {
 
 	private final int EDGE_WEIGHT = 5;
 	
-	protected GraphDatabaseService db;
+//	protected GraphDatabaseService db;
 
 	public static void main(String[] args) throws Exception {
 		MainAccessPatternWeight mainAccessPatternWeight = new MainAccessPatternWeight();
@@ -94,14 +93,13 @@ public class MainAccessPatternWeight extends MainAccessPattern {
 				TraversalDescription traversalDescription = 
 						TraversalDescriptionBuilder.buildFromJsonMapForAP(jsonMap);
 				
-				Node startNode 		= db.getNodeById(startNodeID);
-				increaseTraversedEdgesWeight(traversalDescription, startNode);
-				logger.info("{} edges weight increased", ++i);
+				processRandomID(traversalDescription, startNodeID, ++i);
+				
 			}
 		}
 	}
 	
-	private void createRandomAccessPatterns(
+	protected void createRandomAccessPatterns(
 			Map<String, Object> jsonMap, String directory, String ending) throws Exception 
 	{
 		logger.info("Creating random access patterns for json:\n" +jsonMap
@@ -112,12 +110,17 @@ public class MainAccessPatternWeight extends MainAccessPattern {
 		Set<Integer> randomIDSet = createRandomIDs();
 		int i = 0;
 		for (Integer randomID : randomIDSet) {
-			Node startNode 		= db.getNodeById(randomID);
-			increaseTraversedEdgesWeight(traversalDescription, startNode);
+			processRandomID(traversalDescription, randomID, ++i);
 			
 			writeJsonToFile(jsonMap, directory, ending, randomID);
-			logger.info("{} edges weight increased", ++i);
 		}
+	}
+
+	protected void processRandomID(TraversalDescription traversalDescription,
+			Integer randomID, int count) throws Exception {
+		Node startNode 		= db.getNodeById(randomID);
+		increaseTraversedEdgesWeight(traversalDescription, startNode);
+		logger.info("{} randomID processed", count);
 	}
 	
 	private void increaseTraversedEdgesWeight(TraversalDescription td, Node startNode) 
@@ -151,7 +154,7 @@ public class MainAccessPatternWeight extends MainAccessPattern {
 		GPartPartitionerWeighted.performGpartingAndWriteGidPartitionMap(PARTITION_COUNT);
 	}
 
-	private void registerShutdownHook() {
+	protected void registerShutdownHook() {
 		// Registers a shutdown hook for the Neo4j instance so that it
 		// shuts down nicely when the VM exits (even if you "Ctrl-C" the
 		// running example before it's completed)

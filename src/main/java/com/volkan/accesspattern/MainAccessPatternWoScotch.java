@@ -6,19 +6,18 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.volkan.Configuration;
 import com.volkan.interpartitiontraverse.JsonHelper;
-import com.volkan.interpartitiontraverse.TraversalDescriptionBuilder;
 
-public class MainAccessPatternWoScotch extends MainAccessPattern{
+public class MainAccessPatternWoScotch extends MainAccessPatternWeight{
 
 	private static final Logger logger = LoggerFactory.getLogger(MainAccessPatternWoScotch.class);
 	
@@ -35,41 +34,51 @@ public class MainAccessPatternWoScotch extends MainAccessPattern{
 	}
 	
 	public void work() throws Exception {
-//		//2 Depths
-		Map<String, Object> jsonMap = JsonHelper.createJsonMapWithDirectionsAndRelTypes(
-						Arrays.asList("OUT", "IN"), Arrays.asList("follows", "follows"));
-		String jsonsOutputDir = "src/main/resources/jsons/erdos/2depth/";
-		String ending		  = "out_out.json";
-		createJsonOutputDir(jsonsOutputDir);
-		createRandomAccessPatterns(jsonMap, jsonsOutputDir, ending);
+		db = new GraphDatabaseFactory().newEmbeddedDatabase(DB_PATH);
+		registerShutdownHook();
+		
+		boolean useExistingAccessPatterns = true;
+		
+		// RECOMMENDATION
+		Map<String, Object> jsonMap = JsonHelper
+				.createJsonMapWithDirectionsAndRelTypes(
+						Arrays.asList("OUT", "IN", "OUT"),
+						Arrays.asList("follows", "follows", "follows"));
+		String jsonsOutputDir = "src/main/resources/jsons/erdos/3depth/";
+		String ending = "out_in_out.json";
+
+		createOrUseExistingAPs(jsonMap, jsonsOutputDir, ending,
+				useExistingAccessPatterns);
+
+		// //2 Depths
+		jsonMap = JsonHelper
+				.createJsonMapWithDirectionsAndRelTypes(
+						Arrays.asList("OUT", "IN"),
+						Arrays.asList("follows", "follows"));
+		jsonsOutputDir = "src/main/resources/jsons/erdos/2depth/";
+		ending = "out_in.json";
+
+		createOrUseExistingAPs(jsonMap, jsonsOutputDir, ending,
+				useExistingAccessPatterns);
 		writeGidPartitionMapForRuby();
 	}
 	
-	private void createRandomAccessPatterns(
-			Map<String, Object> jsonMap, String directory, String ending) throws Exception 
+	protected void processRandomID(TraversalDescription traversalDescription, 
+			Integer randomID, int count) throws Exception
 	{
-		logger.info("Creating random access patterns for json:\n" +jsonMap
-				+"\n in dir:"+directory+" with ending "+ending);
-		TraversalDescription traversalDescription = 
-				TraversalDescriptionBuilder.buildFromJsonMapForAP(jsonMap);
+		SortedSet<Long> nodesInTraversal = 
+				collectConnectedNodeIDsOfStartNodeID(randomID, traversalDescription);
+		logger.info("randomID: "+randomID+" node count in traversal="
+						+nodesInTraversal.size()+" count: "+ count);	
 		
-		Set<Integer> randomIDSet = createRandomIDs();
-		int i = 0;
-		for (Integer randomID : randomIDSet) {
-			SortedSet<Long> set = 
-					collectConnectedNodeIDsOfStartNodeID(randomID, traversalDescription);
-			logger.info("randomID: "+randomID+" size="+set.size()+" count: "+ ++i);	
-			
-			int partition = randomID % (PARTITION_COUNT-1) + 6474;
-			SortedSet<Long> gids = partitionGidsMap.get(partition);
-			if (gids == null) {
-				gids = new TreeSet<Long>();
-				partitionGidsMap.put(partition, gids);
-			}
-			gids.add(randomID.longValue());
-			gids.addAll(set);
-			
+		int partition = randomID % (PARTITION_COUNT) + 6474;
+		SortedSet<Long> gids = partitionGidsMap.get(partition);
+		if (gids == null) {
+			gids = new TreeSet<Long>();
+			partitionGidsMap.put(partition, gids);
 		}
+		gids.add(randomID.longValue());
+		gids.addAll(nodesInTraversal);
 	}
 	
 	private void writeGidPartitionMapForRuby() throws IOException {
@@ -77,12 +86,25 @@ public class MainAccessPatternWoScotch extends MainAccessPattern{
 			String fileName = Configuration.GID_PARTITION_MAP + "_" + partition;
 			BufferedWriter gpartInputFile = new BufferedWriter(new FileWriter(fileName));
 			
-			for (Long gid : partitionGidsMap.get(partition)) {
+			SortedSet<Long> gids = partitionGidsMap.get(partition);
+			for (Long gid : gids) {
 				gpartInputFile.write(gid+","+partition+"\n");
 			}
 			
+			assignMissingGidsToLastPartition(gpartInputFile, gids);
+			
 			if (gpartInputFile != null)
 				gpartInputFile.close();
+		}
+	}
+
+	protected void assignMissingGidsToLastPartition(
+			BufferedWriter gpartInputFile, SortedSet<Long> gids) throws IOException 
+	{
+		for (long i = 1; i <= MAX_NODE_COUNT; i++) {
+			if (!gids.contains(i)) {
+				gpartInputFile.write(i+","+LAST_PARTITION+"\n");
+			}
 		}
 	}
 

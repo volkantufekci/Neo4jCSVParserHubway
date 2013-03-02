@@ -39,7 +39,7 @@ public class MainAccessPattern {
 	protected int RANDOM_ACCESS_COUNT;
 	protected  final int MAX_NODE_COUNT 	 = 1850065;
 	protected  int PARTITION_COUNT;
-	private  final int LAST_PARTITION		 = 6483;
+	protected  int LAST_PARTITION;
 	private  int maxNodeCountInDBAP 		 = 0;
 
 	protected  String DB_PATH;
@@ -67,6 +67,7 @@ public class MainAccessPattern {
 				"/erdos8474notindexed.201301151430.graph.db/");
 		RANDOM_ACCESS_COUNT = Integer.parseInt(Utility.getValueOfProperty("RANDOM_ACCESS_COUNT", "0"));
 		PARTITION_COUNT = Integer.parseInt(Utility.getValueOfProperty("PARTITION_COUNT", "0"));
+		LAST_PARTITION = Integer.parseInt(Utility.getValueOfProperty("LAST_PARTITION", "6383"));
 	}
 	
 	public static void main(String[] args) throws Exception {
