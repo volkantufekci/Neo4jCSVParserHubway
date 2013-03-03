@@ -37,9 +37,9 @@ public class MainAccessPattern {
 	private static final Logger logger = LoggerFactory.getLogger(MainAccessPattern.class);
 	
 	protected int RANDOM_ACCESS_COUNT;
-	protected  final int MAX_NODE_COUNT 	 = 1850065;
-	protected  int PARTITION_COUNT;
-	protected  int LAST_PARTITION;
+	protected int MAX_NODE_COUNT;
+	protected int PARTITION_COUNT;
+	protected int LAST_PARTITION;
 	private  int maxNodeCountInDBAP 		 = 0;
 
 	protected  String DB_PATH;
@@ -68,6 +68,7 @@ public class MainAccessPattern {
 		RANDOM_ACCESS_COUNT = Integer.parseInt(Utility.getValueOfProperty("RANDOM_ACCESS_COUNT", "0"));
 		PARTITION_COUNT = Integer.parseInt(Utility.getValueOfProperty("PARTITION_COUNT", "0"));
 		LAST_PARTITION = Integer.parseInt(Utility.getValueOfProperty("LAST_PARTITION", "6383"));
+		MAX_NODE_COUNT = Integer.parseInt(Utility.getValueOfProperty("MAX_NODE_COUNT", "1850065"));
 	}
 	
 	public static void main(String[] args) throws Exception {
