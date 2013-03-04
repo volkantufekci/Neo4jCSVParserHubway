@@ -91,7 +91,7 @@ public class MainAccessPatternWeight extends MainAccessPattern {
 				logger.info("Creating random access patterns with existing json:\n" +jsonMap
 						+"\n in dir:"+directory+" with ending "+ending);
 				TraversalDescription traversalDescription = 
-						TraversalDescriptionBuilder.buildFromJsonMapForAP(jsonMap);
+						TraversalDescriptionBuilder.buildFromJsonMap(jsonMap);
 				
 				processRandomID(traversalDescription, startNodeID, ++i);
 				
@@ -105,7 +105,7 @@ public class MainAccessPatternWeight extends MainAccessPattern {
 		logger.info("Creating random access patterns for json:\n" +jsonMap
 				+"\n in dir:"+directory+" with ending "+ending);
 		TraversalDescription traversalDescription = 
-				TraversalDescriptionBuilder.buildFromJsonMapForAP(jsonMap);
+				TraversalDescriptionBuilder.buildFromJsonMap(jsonMap);
 		
 		Set<Integer> randomIDSet = createRandomIDs();
 		int i = 0;

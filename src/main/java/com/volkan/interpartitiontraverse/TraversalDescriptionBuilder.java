@@ -1,5 +1,6 @@
 package com.volkan.interpartitiontraverse;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -16,19 +17,7 @@ public class TraversalDescriptionBuilder {
 	public static TraversalDescription buildFromJsonMap(Map<String, Object> jsonMap) {
 		TraversalDescriptionBuilder builder = new TraversalDescriptionBuilder();
 		builder.addDepth(jsonMap);
-		builder.addRelationships(jsonMap);
-		builder.addShadowEvaluator();
-		builder.addUniqueness();
-		return builder.build();
-	}
-	
-	public static TraversalDescription buildFromJsonMapForAP(Map<String, Object> jsonMap) {
-		TraversalDescriptionBuilder builder = new TraversalDescriptionBuilder();
-		int depth = (Integer) jsonMap.get(JsonKeyConstants.DEPTH);
-		builder.traversalDescription = 
-				builder.traversalDescription.evaluator(Evaluators.atDepth(depth));
-		builder.addRelationships(jsonMap);
-		builder.addShadowEvaluator();
+		builder.addShadowEvaluator(jsonMap);
 		builder.addUniqueness();
 		return builder.build();
 	}
@@ -43,17 +32,6 @@ public class TraversalDescriptionBuilder {
 				traversalDescription.evaluator(Evaluators.fromDepth(1))
 									.evaluator(Evaluators.toDepth(depth));
 	}
-
-	@SuppressWarnings("unchecked")
-	private void addRelationships(Map<String, Object> jsonMap) {
-		for (Map<String, String> rel : (List<Map<String, String>>) jsonMap.get("relationships")) {
-			String relationName = rel.get("type");
-			Direction direction = findOutDirection(rel);
-			traversalDescription = 
-					traversalDescription.relationships(
-							DynamicRelationshipType.withName(relationName), direction);
-		}
-	}
 	
 	private Direction findOutDirection(Map<String, String> rel) {
 		String directionString = rel.get("direction");
@@ -66,8 +44,19 @@ public class TraversalDescriptionBuilder {
 		return direction;
 	}
 	
-	private void addShadowEvaluator() {
-		traversalDescription = traversalDescription.evaluator(new ShadowEvaluator());
+	@SuppressWarnings("unchecked")
+	private void addShadowEvaluator(Map<String, Object> jsonMap) {
+		ArrayList<VEdge> orderedPathContext = new ArrayList<>();
+		
+		for (Map<String, String> rel : (List<Map<String, String>>) jsonMap.get("relationships")) {
+			String relationName = rel.get("type");
+			Direction direction = findOutDirection(rel);
+			VEdge vedge = new VEdge(direction, DynamicRelationshipType.withName(relationName));
+			orderedPathContext.add(vedge);
+		}
+		
+		traversalDescription = 
+				traversalDescription.evaluator(new ShadowEvaluator(orderedPathContext));
 	}
 	
 	private void addUniqueness() {
