@@ -24,28 +24,50 @@ public class ShadowEvaluator implements Evaluator{
         {
             return Evaluation.EXCLUDE_AND_CONTINUE;
         }
+		boolean included = isExpectedDirectionAndType(path);
+        
+        boolean continued = false;
+		if (included) {
+			continued = doesEndWithRealNode(path);
+		}
+        
+        return Evaluation.of( included, continued );
+	}
+
+	private boolean isExpectedDirectionAndType(Path path) {
+		boolean isExpectedDirection = isExpectedDirection(path);
+		
+		boolean isExpectedType = false;
+		if (isExpectedDirection) {
+			isExpectedType = isExpectedType(path);
+		}
+        
+        boolean included = isExpectedDirection && isExpectedType;
+		return included;
+	}
+
+	private boolean isExpectedType(Path path) {
 		RelationshipType expectedType = orderedPathContext.get( path.length() - 1 ).getType();
         boolean isExpectedType = path.lastRelationship().isType( expectedType );
-        
-        Direction expectedDirection = orderedPathContext.get( path.length() - 1 ).getDirection();
+		return isExpectedType;
+	}
+
+	private boolean isExpectedDirection(Path path) {
+		Direction expectedDirection = orderedPathContext.get( path.length() - 1 ).getDirection();
         Relationship edge = path.lastRelationship();
         boolean isExpectedDirection = 
         		(expectedDirection.equals(Direction.OUTGOING)) ?
                 	(edge.getEndNode().equals(path.endNode()))
                 		: (edge.getStartNode().equals(path.endNode()));
-        
-        boolean included = isExpectedDirection && isExpectedType;
-        boolean isReal = (boolean) path.endNode().getProperty(
-        						PropertyNameConstants.SHADOW, true);
-        boolean continued = isExpectedType && isReal;
-        
-        return Evaluation.of( included, continued );
-		
-//		if ( (boolean) path.endNode().getProperty(PropertyNameConstants.SHADOW, false) ) {
-//			return Evaluation.INCLUDE_AND_PRUNE;
-//		} else {
-//			return Evaluation.INCLUDE_AND_CONTINUE;
-//		}
+		return isExpectedDirection;
+	}
+
+	private boolean doesEndWithRealNode(Path path) {
+		boolean continued;
+		boolean isReal = (boolean) path.endNode().getProperty(
+				PropertyNameConstants.SHADOW, true);
+		continued = isReal;
+		return continued;
 	}
 	
 	public static boolean isShadow(Node endNode) {
