@@ -55,9 +55,6 @@ public class Main {
 //				ErdosWebGraphImporter.readBigFile();
 				new Neo4jClient().getMostFollowedNodes(db, 432911, "follows", Direction.INCOMING);
 				break;
-			case 5:
-				traverseWithShadowEvaluator();
-				break;
 			case 6:
 				traverseViaJsonMap(JsonHelper.readJsonFileIntoMap("testhop.json"));
 				break;
@@ -390,40 +387,6 @@ public class Main {
 		
 		for (String result : resultJson) {
 			System.out.println(result);
-		}
-	}
-
-	private static void traverseWithShadowEvaluator() {
-		Set<Node> shadowResults = new HashSet<Node>();
-		Set<String> realResults 	= new HashSet<String>();
-		
-		Node node = db.getNodeById(52220);
-		int i = 0; int toDepth = 3;
-//		OrderedByTypeExpander mexpander = new OrderedByTypeExpander();
-//		mexpander.add(DynamicRelationshipType.withName("BIKE"), Direction.OUTGOING);
-		for (Path path : Traversal.description()
-				.relationships(DynamicRelationshipType.withName("BIKE"), Direction.OUTGOING)
-				.relationships(DynamicRelationshipType.withName("BIKE"), Direction.INCOMING)
-				.relationships(DynamicRelationshipType.withName("END"), Direction.OUTGOING)
-				.evaluator(Evaluators.fromDepth(1)).evaluator(Evaluators.toDepth(toDepth))
-				.evaluator(new ShadowEvaluator())
-				.traverse(node)) {
-				Node endNode = path.endNode();
-				if (path.length() < toDepth) {
-//					String gid = (String) endNode.getProperty("Gid");
-					shadowResults.add(endNode);
-					System.out.println("id: " + endNode.getId() + "\t" 
-										+ ShadowEvaluator.isShadow(endNode) + "\t" + path );
-//					String port = (String) endNode.getProperty("Real");
-//					delegateQueryToAnotherNeo4j(url, port, jsonMap);
-				} else {
-					realResults.add((String) endNode.getProperty("Name"));
-				}
-			i++;		
-		}
-		System.out.println(i);
-		for (String name : realResults) {
-			System.out.println(name);
 		}
 	}
 
