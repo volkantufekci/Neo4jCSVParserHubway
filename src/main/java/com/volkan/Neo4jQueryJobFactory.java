@@ -45,7 +45,7 @@ public class Neo4jQueryJobFactory {
 					generateJobInDBFromJsonFileName(h2Client, jsonMap);
 					Neo4jClientAsync neo4jClientAsync = new Neo4jClientAsync();
 					neo4jClientAsync.delegateQueryAsync(port, jsonMap);
-					logger.debug("Job submitted to Neo-{}", port);
+					logger.info("Job submitted to Neo-{}", port);
 					neo4jClientAsync.periodicFetcher((long) jsonMap.get(JsonKeyConstants.PARENT_JOB_ID));
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -77,7 +77,7 @@ public class Neo4jQueryJobFactory {
 					generateJobInDBFromJsonFileName(h2Client, jsonMap);
 					Neo4jClientAsync neo4jClientAsync = new Neo4jClientAsync();
 					neo4jClientAsync.delegateQueryAsync(port, jsonMap);
-					logger.debug("Job submitted to Neo-{}", port);
+					logger.info("Job submitted to Neo-{}", port);
 					neo4jClientAsync.periodicFetcher((long) jsonMap.get(JsonKeyConstants.PARENT_JOB_ID));
 				} catch (Exception e) {
 					e.printStackTrace();
