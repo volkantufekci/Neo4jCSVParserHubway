@@ -240,6 +240,7 @@ public class Main {
 		String rootDir = Utility.getValueOfProperty("jsonRootDir", "");
 		int jobCountPerRound = Integer.parseInt(
 				Utility.getValueOfProperty("totalRandomJobCount", Integer.MAX_VALUE + ""));
+		String randomJsonPolicy = Utility.getValueOfProperty("randomJsonPolicy", "BY_TURN");
 		
 		long interval 	 = Long.parseLong(Utility.getValueOfProperty("interval", "0"));
 	
@@ -249,7 +250,13 @@ public class Main {
 		int times = (int) (totalRunTime / interval);
 		for (int j = 0; j < times; j++) {
 			for(int i=0; i < jobCountPerRound; i++){
-				String jsonFileName = FileListingVisitor.randomJsonFileNameFromDir(rootDir);
+				String jsonFileName;
+				if (randomJsonPolicy.equalsIgnoreCase("BY_TURN")) {
+					jsonFileName = FileListingVisitor.listJsonFileNamesInDir(rootDir).get(i);
+				} else {
+					jsonFileName = FileListingVisitor.randomJsonFileNameFromDir(rootDir);
+				}
+				
 				if (shouldFetchPortFromRedis()) {
 					executeJobForJsonFileName(jsonFileName, executorService, h2Client, jedisPool);
 				} else {
