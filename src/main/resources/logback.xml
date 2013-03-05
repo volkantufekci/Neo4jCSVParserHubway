@@ -16,7 +16,8 @@
 
 	<appender name="FILE"
 		class="ch.qos.logback.core.FileAppender">
-		<File>./src/main/resources/log/logFile.log</File>
+		<!-- <File>./src/main/resources/log/logFile.log</File> -->
+		<File>/mnt/v/logFile.log</File>
 		<layout class="ch.qos.logback.classic.PatternLayout">
 			<Pattern>
 				%d{HH:mm:ss,SSS} - %msg%n
