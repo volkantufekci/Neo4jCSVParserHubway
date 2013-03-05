@@ -64,9 +64,10 @@ public class ShadowEvaluator implements Evaluator{
 
 	private boolean doesEndWithRealNode(Path path) {
 		boolean continued;
-		boolean isReal = (boolean) path.endNode().getProperty(
-				PropertyNameConstants.SHADOW, true);
-		continued = isReal;
+//		boolean isReal = (boolean) path.endNode().getProperty(
+//				PropertyNameConstants.SHADOW, true);
+		boolean isShadow = isShadow(path.endNode());
+		continued = !isShadow;
 		return continued;
 	}
 	
