@@ -46,7 +46,7 @@ public class MainAccessPatternWeight extends MainAccessPattern {
 				JsonHelper.createJsonMapWithDirectionsAndRelTypes(
 						Arrays.asList("OUT", "IN", "OUT"), 
 						Arrays.asList("follows", "follows", "follows"));
-		String jsonsOutputDir 	= "src/main/resources/jsons/erdos/3depth/";
+		String jsonsOutputDir 	= "src/main/resources/jsons/erdos/100/3depth/";
 		String ending		  	= "out_in_out.json";
 		
 		boolean useExistingAccessPatterns = true;
@@ -55,9 +55,9 @@ public class MainAccessPatternWeight extends MainAccessPattern {
 		
 //		//2 Depths
 		jsonMap = JsonHelper.createJsonMapWithDirectionsAndRelTypes(
-						Arrays.asList("OUT", "IN"), Arrays.asList("follows", "follows"));
-		jsonsOutputDir = "src/main/resources/jsons/erdos/2depth/";
-		ending		  = "out_in.json";
+						Arrays.asList("OUT", "OUT"), Arrays.asList("follows", "follows"));
+		jsonsOutputDir = "src/main/resources/jsons/erdos/100/2depth/";
+		ending		  = "out_out.json";
 		
 		createOrUseExistingAPs(
 			jsonMap, jsonsOutputDir, ending, useExistingAccessPatterns);
