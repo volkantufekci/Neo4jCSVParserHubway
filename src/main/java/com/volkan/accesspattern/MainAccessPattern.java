@@ -203,10 +203,9 @@ public class MainAccessPattern {
 		}
 	}
 
-	protected SortedSet<Long> collectConnectedNodeIDsOfStartNodeID(
+	public SortedSet<Long> collectConnectedNodeIDsOfStartNodeID(
 			Integer startNodeID, TraversalDescription traversalDescription) throws Exception 
 	{
-		logger.info("collectConnectedNodeIDsOfStartNodeID started");
 		Node startNode 		= db.getNodeById(startNodeID);
 		SortedSet<Long> set = putNodeIDsInPathIntoSet(traversalDescription, startNode);
 		return set;

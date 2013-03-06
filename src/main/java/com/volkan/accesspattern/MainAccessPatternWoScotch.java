@@ -5,6 +5,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -44,25 +45,52 @@ public class MainAccessPatternWoScotch extends MainAccessPatternWeight{
 				.createJsonMapWithDirectionsAndRelTypes(
 						Arrays.asList("OUT", "IN", "OUT"),
 						Arrays.asList("follows", "follows", "follows"));
-		String jsonsOutputDir = "src/main/resources/jsons/erdos/3depth/";
+		String directory = "src/main/resources/jsons/erdos/100/3depth/";
 		String ending = "out_in_out.json";
-
-		createOrUseExistingAPs(jsonMap, jsonsOutputDir, ending,
+		usePreCalculatedIDsForJsons(3, jsonMap, directory, ending);
+		
+		createOrUseExistingAPs(jsonMap, directory, ending,
 				useExistingAccessPatterns);
 
 		// //2 Depths
 		jsonMap = JsonHelper
 				.createJsonMapWithDirectionsAndRelTypes(
-						Arrays.asList("OUT", "IN"),
+						Arrays.asList("OUT", "OUT"),
 						Arrays.asList("follows", "follows"));
-		jsonsOutputDir = "src/main/resources/jsons/erdos/2depth/";
-		ending = "out_in.json";
-
-		createOrUseExistingAPs(jsonMap, jsonsOutputDir, ending,
+		directory = "src/main/resources/jsons/erdos/100/2depth/";
+		ending = "out_out.json";
+		usePreCalculatedIDsForJsons(2, jsonMap, directory, ending);
+		
+		createOrUseExistingAPs(jsonMap, directory, ending,
 				useExistingAccessPatterns);
 		writeGidPartitionMapForRuby();
 		
 		writeGidPartitionMapForRubyForLastPartition();
+	}
+	
+	protected void usePreCalculatedIDsForJsons(
+			int depth, Map<String, Object> jsonMap, 
+				String directory, String ending) throws IOException, Exception
+	{
+		Map<Integer,List<Integer>> depthIDsMap = new HashMap<>();
+		List<Integer> depth2 = 
+				Arrays.asList(5, 10, 15, 25, 30, 35, 40, 55, 60, 70, 65, 75, 80, 90, 
+					100, 110, 125, 120, 140, 130, 135, 1, 6, 16, 21, 31, 36, 41, 46, 
+					51, 56, 61, 71, 66, 76, 81, 91, 101, 106, 126, 121, 136, 131, 2, 7, 12, 17, 27, 
+					37, 47, 52, 57, 67, 72, 87, 92, 102, 97, 107, 117, 122, 137, 132, 8, 13, 38, 
+					43, 48, 53, 58, 63, 68, 78, 73, 83, 93, 103, 98, 118, 123, 138, 133, 4, 9, 14, 
+					39, 44, 49, 54, 59, 69, 64, 79, 74, 89, 119, 124, 139, 129, 134);
+		depthIDsMap.put(2, depth2);
+		
+		List<Integer> depth3 = 
+				Arrays.asList(11, 394, 125, 234, 187, 416, 183, 382, 120, 95);
+		depthIDsMap.put(3, depth3);
+		
+		//DELETES EVERYTHING UNDER directory
+		createJsonOutputDir(directory);
+		for (Integer id : depthIDsMap.get(depth)) {
+			writeJsonToFile(jsonMap, directory, ending, id);
+		}
 	}
 	
 	protected void processRandomID(TraversalDescription traversalDescription, 
