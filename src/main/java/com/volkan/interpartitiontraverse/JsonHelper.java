@@ -32,6 +32,13 @@ public class JsonHelper {
 		return jsonMap;
 	}
 	
+	public static Map<String, Object> readJsonStringIntoMap(String json) throws Exception {
+		ObjectMapper mapper = new ObjectMapper();
+		@SuppressWarnings("unchecked")
+		Map<String, Object> jsonMap	= mapper.readValue(json, Map.class);
+		return jsonMap;
+	}
+	
 	public static String writeMapIntoJsonString(Object jsonMap) throws Exception {
 		ObjectMapper mapper = new ObjectMapper();
 		String jsonString = mapper.writeValueAsString(jsonMap);
