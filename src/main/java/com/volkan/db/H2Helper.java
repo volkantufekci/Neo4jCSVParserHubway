@@ -7,6 +7,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -23,12 +24,13 @@ public class H2Helper {
 	private Connection con;
 
 	public void updateJobWithResults(long jobID, String cypherResult) throws SQLException {
-		String sql = "UPDATE " +table+ " SET VRESULT = ? WHERE ID = ?";
+		String sql = "UPDATE " +table+ " SET VRESULT = ? ,FINISHED_AT=? WHERE ID = ?";
 		PreparedStatement prepStatement = null;
 		try {
 			prepStatement = con.prepareStatement(sql);
 			prepStatement.setClob(1, new StringReader(cypherResult));
-			prepStatement.setLong(2, jobID);
+			prepStatement.setTimestamp(2, new java.sql.Timestamp(new Date().getTime()));
+			prepStatement.setLong(3, jobID);
 			int affectedRows = prepStatement.executeUpdate();
 			if (affectedRows == 0) {
 				throw new SQLException("Creating job failed, no rows affected.");
@@ -111,9 +113,10 @@ public class H2Helper {
 
 		// prepared statement
 		prepStatement = con.prepareStatement("INSERT INTO " + table
-				+ " (PARENT_ID, VQUERY) VALUES (?,?)");
+				+ " (PARENT_ID, VQUERY, CREATED_AT) VALUES (?,?,?)");
 		prepStatement.setLong(1, parentJobID);
 		prepStatement.setString(2, traversalQuery);
+		prepStatement.setTimestamp(3, new java.sql.Timestamp(new Date().getTime()));
 		int affectedRows = prepStatement.executeUpdate();
 		if (affectedRows == 0) {
 			throw new SQLException("Creating job failed, no rows affected.");
@@ -146,6 +149,8 @@ public class H2Helper {
 			vJobEntity.parent_id 	= rs.getLong("PARENT_ID");
 			vJobEntity.vquery 		= rs.getString("VQUERY");
 			vJobEntity.vresult 		= rs.getString("VRESULT");
+			vJobEntity.created_at	= rs.getTimestamp("CREATED_AT");
+			vJobEntity.finished_at	= rs.getTimestamp("FINISHED_AT");
 		} else {
 			throw new SQLException("No job found with ID = " + jobID);
 		}
@@ -171,6 +176,8 @@ public class H2Helper {
 			vJobEntity.parent_id 	= rs.getLong("PARENT_ID");
 			vJobEntity.vquery 		= rs.getString("VQUERY");
 			vJobEntity.vresult 		= rs.getString("VRESULT");
+			vJobEntity.created_at	= rs.getTimestamp("CREATED_AT");
+			vJobEntity.finished_at	= rs.getTimestamp("FINISHED_AT");
 			results.add(vJobEntity);
 		} 
 		
