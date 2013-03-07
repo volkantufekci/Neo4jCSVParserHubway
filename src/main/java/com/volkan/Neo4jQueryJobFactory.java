@@ -42,7 +42,7 @@ public class Neo4jQueryJobFactory {
 			public void run() {
 				try {
 					String port = fetchPortFromRedis(jedisPool, jsonMap);
-					generateJobInDBFromJsonFileName(h2Client, jsonMap);
+					generateJobInDBFromJsonFileName(h2Client, jsonMap, port);
 					Neo4jClientAsync neo4jClientAsync = new Neo4jClientAsync();
 					neo4jClientAsync.delegateQueryAsync(port, jsonMap);
 					logger.info("Job submitted to Neo-{}", port);
@@ -74,7 +74,7 @@ public class Neo4jQueryJobFactory {
 			public void run() {
 				try {
 					String port = fetchPortViaModulo();
-					generateJobInDBFromJsonFileName(h2Client, jsonMap);
+					generateJobInDBFromJsonFileName(h2Client, jsonMap, port);
 					Neo4jClientAsync neo4jClientAsync = new Neo4jClientAsync();
 					neo4jClientAsync.delegateQueryAsync(port, jsonMap);
 					logger.info("Job submitted to Neo-{}", port);
@@ -100,7 +100,9 @@ public class Neo4jQueryJobFactory {
 	}
 	
 	private static Map<String, Object> generateJobInDBFromJsonFileName(
-			H2Client h2Client, Map<String, Object> jsonMap) throws Exception {
+			H2Client h2Client, Map<String, Object> jsonMap, String port) throws Exception {
+
+		jsonMap.put(JsonKeyConstants.START_PORT, port);
 		long jobID = h2Client.generateJob(jsonMap);
 		jsonMap.put(JsonKeyConstants.JOB_ID, jobID);
 		jsonMap.put(JsonKeyConstants.PARENT_JOB_ID, jobID);

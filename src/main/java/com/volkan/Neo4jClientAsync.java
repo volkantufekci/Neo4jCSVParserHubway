@@ -1,6 +1,5 @@
 package com.volkan;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -11,6 +10,8 @@ import org.slf4j.LoggerFactory;
 import com.sun.jersey.api.client.ClientResponse;
 import com.volkan.db.H2Helper;
 import com.volkan.db.VJobEntity;
+import com.volkan.interpartitiontraverse.JsonHelper;
+import com.volkan.interpartitiontraverse.JsonKeyConstants;
 import com.volkan.interpartitiontraverse.RestConnector;
 
 public class Neo4jClientAsync {
@@ -28,9 +29,9 @@ public class Neo4jClientAsync {
 				ClientResponse response = restConnector.delegateQueryWithoutResult(jsonMap);
 				String resultString = response.getEntity(String.class);
 				if( response.getStatus() == 500 ){
-					logger.error("uzaktan CAKILDI:" + jsonMap);
+					logger.error("####################UZAKTAN CAKILDI:" + jsonMap);
 				} else {
-					logger.debug("uzaktan CALISTI:" + jsonMap);
+					logger.debug("uzaktan calisti:" + jsonMap);
 				}
 				
 				logger.debug(resultString);
@@ -40,7 +41,7 @@ public class Neo4jClientAsync {
 		
 	}
 	
-    public void periodicFetcher(long parentID) throws ClassNotFoundException, SQLException, InterruptedException {
+    public void periodicFetcher(long parentID) throws Exception {
         long start = System.currentTimeMillis();
 
         H2Helper h2Helper = new H2Helper();
@@ -55,7 +56,8 @@ public class Neo4jClientAsync {
 				List<Long> jobIDs = new ArrayList<Long>();
 				for (VJobEntity vJobEntity : list) {
 					if (vJobEntity.getVresult() != null){
-						logger.debug(vJobEntity.getVresult());
+						logFetchedJob(vJobEntity);
+						
 						jobIDs.add(vJobEntity.getId());
 					}	
 				}
@@ -69,4 +71,15 @@ public class Neo4jClientAsync {
         long end = System.currentTimeMillis();
         logger.info(end - start + " miliseconds passed in periodicFetcher" );
     }
+
+	private void logFetchedJob(VJobEntity vJobEntity) throws Exception {
+		String json = vJobEntity.getVquery();
+		Map<String,Object> jsonMap = JsonHelper.readJsonStringIntoMap(json);
+		String startNode = jsonMap.get(JsonKeyConstants.START_NODE).toString();
+		Object port      = jsonMap.get(JsonKeyConstants.START_PORT);
+		String portString= port == null ? "NA" : port.toString();
+		logger.info("StartNode:{} Port:{} ID:{} ParentID:{}", 
+				startNode, portString, vJobEntity.getId(), vJobEntity.getParent_id());
+		logger.debug(vJobEntity.getVresult());
+	}
 }
