@@ -13,7 +13,6 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.volkan.Neo4jClientAsync;
 import com.volkan.Utility;
 
 public class H2Helper {
@@ -36,6 +35,7 @@ public class H2Helper {
 				throw new SQLException("Creating job failed, no rows affected.");
 			}
 		} catch (Exception e) {
+			logger.error("Job could not be updated => "+e.getMessage());
 			throw new SQLException("Job could not be updated", e);
 		}
 		
